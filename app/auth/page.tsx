@@ -1,126 +1,70 @@
 'use client'
 
-import { useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
+import { getSupabaseBrowserClient } from '@/lib/supabase/client'
 
 export default function AuthPage() {
   const router = useRouter()
+  const supabase = useMemo(() => getSupabaseBrowserClient(), [])
+  const [mode, setMode] = useState<'signin' | 'signup'>('signin')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const [fullName, setFullName] = useState('')
   const [message, setMessage] = useState('')
+  const [busy, setBusy] = useState(false)
 
-  // -------------------------
-  // SIGN UP
-  // -------------------------
-  async function signUp() {
-    // 1️⃣ Create the user in Supabase Auth
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email,
-      password,
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) router.replace('/dashboard')
     })
-    if (authError) {
-      setMessage(authError.message)
-      return
-    }
+  }, [router, supabase])
 
-    setMessage('Signed up! Check your email to confirm.')
-
-    // 2️⃣ Upload avatar if provided
-    let avatarUrl = null
-    if (avatarFile) {
-      const fileExt = avatarFile.name.split('.').pop()
-      const fileName = `${Date.now()}.${fileExt}` // unique file name
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(fileName, avatarFile)
-      if (uploadError) {
-        setMessage(uploadError.message)
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setBusy(true)
+    setMessage('')
+    try {
+      if (mode === 'signup') {
+        const { error } = await supabase.auth.signUp({ email, password, options: { data: { full_name: fullName.trim() } } })
+        if (error) return setMessage('We could not create your account. Check the details and try again.')
+        setMessage('Account created. Confirm your email, then an admin will approve your access.')
         return
       }
-
-      // 3️⃣ Build public URL
-      avatarUrl = `https://ptlxalknnvvoksxopcmj.supabase.co/storage/v1/object/public/avatars/${fileName}`
-    }
-
-    // 4️⃣ Insert profile row
-    const { data: profileData, error: profileError } = await supabase
-      .from('profiles')
-      .insert([
-        { email, avatar_url: avatarUrl }
-      ])
-    if (profileError) setMessage(profileError.message)
-  }
-
-  // -------------------------
-  // SIGN IN
-  // -------------------------
-  async function signIn() {
-    // Sign in the user
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-  
-    if (error) {
-      setMessage(error.message)
-      return
-    }
-  
-    // ✅ Make sure session is set
-    const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
-    if (sessionError) {
-      setMessage(sessionError.message)
-      return
-    }
-  
-    if (sessionData.session) {
-      setMessage('Logged in successfully! Redirecting...')
-      router.push('/dashboard') // Redirect to dashboard
-    } else {
-      setMessage('Login failed. No session found.')
+      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      if (error) return setMessage('Email or password is incorrect.')
+      router.replace('/dashboard')
+    } catch {
+      setMessage('Sign in was interrupted. Please try again.')
+    } finally {
+      setBusy(false)
     }
   }
-  
 
-  // -------------------------
-  // JSX
-  // -------------------------
   return (
-    <div className="p-10 max-w-md mx-auto">
-      <h1 className="text-2xl mb-4">CAFF Login / Signup</h1>
-
-      <input
-        type="email"
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        className="border p-2 w-full mb-2"
-      />
-
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        className="border p-2 w-full mb-2"
-      />
-
-      <input
-        type="file"
-        onChange={(e) => setAvatarFile(e.target.files ? e.target.files[0] : null)}
-        className="border p-2 w-full mb-2"
-      />
-
-      <button onClick={signUp} className="bg-blue-500 text-white p-2 mr-2">
-        Sign Up
-      </button>
-      <button onClick={signIn} className="bg-green-500 text-white p-2">
-        Log In
-      </button>
-
-      <p className="mt-4 text-red-500">{message}</p>
-    </div>
+    <main className="auth-page">
+      <section className="auth-intro">
+        <Image className="brand-mark" src="/brand/caff-logo.png" alt="CAFF League" width={96} height={96} priority />
+        <p className="eyebrow">CASUAL FOOTBALL, SORTED</p>
+        <h1>Your game.<br />Your people.</h1>
+        <p>Availability, balanced teams, results and bragging rights—all in one place.</p>
+      </section>
+      <section className="auth-card">
+        <div className="segmented" role="tablist">
+          <button className={mode === 'signin' ? 'active' : ''} onClick={() => setMode('signin')}>Sign in</button>
+          <button className={mode === 'signup' ? 'active' : ''} onClick={() => setMode('signup')}>Join CAFF</button>
+        </div>
+        <form onSubmit={submit}>
+          <h2>{mode === 'signin' ? 'Welcome back' : 'Create your account'}</h2>
+          <p className="muted">{mode === 'signin' ? 'Sign in to see the next match.' : 'New accounts need approval from an admin.'}</p>
+          {mode === 'signup' && <label>Full name<input required autoComplete="name" value={fullName} onChange={(event) => setFullName(event.target.value)} /></label>}
+          <label>Email<input required type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} /></label>
+          <label>Password<input required minLength={8} type="password" autoComplete={mode === 'signin' ? 'current-password' : 'new-password'} value={password} onChange={(event) => setPassword(event.target.value)} /></label>
+          <button className="primary-button" disabled={busy}>{busy ? 'Please wait…' : mode === 'signin' ? 'Sign in' : 'Create account'}</button>
+          {message && <p className="form-message" role="status">{message}</p>}
+        </form>
+      </section>
+    </main>
   )
 }

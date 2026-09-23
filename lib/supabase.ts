@@ -1,7 +1,5 @@
-// lib/supabase.ts
-import { createClient } from '@supabase/supabase-js'
+// Kept as a compatibility export for older imports. New code should call the
+// factory so configuration errors can be presented as a useful UI state.
+import { getSupabaseBrowserClient } from '@/lib/supabase/client'
 
-export const supabase = createClient(
-  'https://ptlxalknnvvoksxopcmj.supabase.co',
-  'sb_publishable_jDC47bQnS5R9HgHtZ_nSBw_l_iwwCcb'
-)
+export const supabase = getSupabaseBrowserClient()

@@ -9,7 +9,7 @@ import { getSupabaseBrowserClient } from '@/lib/supabase/client'
 import type { Profile } from '@/lib/types'
 
 type MemberAction = 'APPROVE' | 'REJECT' | 'SUSPEND' | 'REINSTATE' | 'MAKE_ADMIN' | 'REMOVE_ADMIN'
-type AuditEntry = { id: number; actor_id: string | null; target_id: string | null; action: string; created_at: string }
+type AuditEntry = { id: number; actor_id: string | null; target_id: string | null; action: string; details: { title?: string }; created_at: string }
 type Feedback = { id: string; reporter_id: string; description: string; route: string; created_at: string }
 type DeletionRequest = { player_id: string; requested_at: string; resolved_at: string | null }
 
@@ -36,7 +36,7 @@ export default function PeoplePage() {
   const load = useCallback(async () => {
     const [members, history, reports, requests] = await Promise.all([
       supabase.from('profiles').select('*').order('created_at', { ascending: false }),
-      supabase.from('admin_audit_log').select('id,actor_id,target_id,action,created_at').order('created_at', { ascending: false }).limit(15),
+      supabase.from('admin_audit_log').select('id,actor_id,target_id,action,details,created_at').order('created_at', { ascending: false }).limit(50),
       supabase.from('feedback_reports').select('*').order('created_at', { ascending: false }).limit(20),
       supabase.from('account_deletion_requests').select('*').is('resolved_at', null),
     ])
@@ -67,6 +67,7 @@ export default function PeoplePage() {
 
   if (profile?.role !== 'ADMIN') return <div className="card empty-state"><h2>Admin access only</h2></div>
   const nameFor = (id: string | null) => people.find((person) => person.id === id)?.full_name ?? 'Former member'
+  const auditTarget = (entry: AuditEntry) => entry.details?.title || (people.some((person) => person.id === entry.target_id) ? nameFor(entry.target_id) : 'Match or former member')
   const pending = people.filter((person) => person.status === 'PENDING')
   const others = people.filter((person) => person.status !== 'PENDING')
 
@@ -76,7 +77,7 @@ export default function PeoplePage() {
     {loading ? <div className="spinner" aria-label="Loading members" /> : <>
       <section className="card"><div className="section-title"><h2>Waiting for approval</h2><span>{pending.length}</span></div>{pending.length ? pending.map((person) => <MemberRow key={person.id} person={person} busy={busy === person.id} owner={Boolean(profile.is_owner)} act={act} />) : <p className="muted">No one is waiting.</p>}</section>
       <section className="card section"><div className="section-title"><h2>All members</h2><span>{people.length}</span></div>{others.map((person) => <MemberRow key={person.id} person={person} busy={busy === person.id} owner={Boolean(profile.is_owner)} act={act} />)}</section>
-      <section className="card section"><h2>Recent admin activity</h2>{audit.length ? audit.map((entry) => <p className="audit-entry" key={entry.id}><strong>{entry.action.replaceAll('_', ' ').toLowerCase()}</strong><span>{nameFor(entry.target_id)} · by {nameFor(entry.actor_id)}</span><time dateTime={entry.created_at}>{new Date(entry.created_at).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })}</time></p>) : <p className="muted">No access changes recorded yet.</p>}</section>
+      <section className="card section"><h2>Recent admin activity</h2>{audit.length ? audit.map((entry) => <p className="audit-entry" key={entry.id}><strong>{entry.action.replaceAll('_', ' ').toLowerCase()}</strong><span>{auditTarget(entry)} · by {nameFor(entry.actor_id)}</span><time dateTime={entry.created_at}>{new Date(entry.created_at).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })}</time></p>) : <p className="muted">No admin changes recorded yet.</p>}</section>
       <section className="card section"><h2>Account deletion requests</h2>{deletions.length ? deletions.map((request) => <p className="audit-entry" key={request.player_id}><strong>{nameFor(request.player_id)}</strong><span>Requested {new Date(request.requested_at).toLocaleDateString('en-GB')}. Contact the member and follow the documented removal procedure.</span></p>) : <p className="muted">No open requests.</p>}</section>
       <section className="card section"><h2>Problem reports</h2>{feedback.length ? feedback.map((report) => <div className="report-entry" key={report.id}><strong>{nameFor(report.reporter_id)}</strong><small>{new Date(report.created_at).toLocaleString('en-GB')} · {report.route}</small><p>{report.description}</p></div>) : <p className="muted">No reports yet.</p>}</section>
     </>}

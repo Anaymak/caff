@@ -20,9 +20,11 @@ Mobile-first football management for a casual local group. CAFF covers account a
 
 ## Account and feedback operations
 
-The Help page accepts feedback and account deletion requests. Admins can review these in People & access. Deletion is not automated: the Owner must confirm the person's identity, decide how historical football data should be handled, remove their Supabase Auth user in the dashboard, then mark the request resolved. Do not promise erasure of match history without reviewing foreign keys and published records first. Profile photos are currently stored in a public Supabase bucket and are URL-accessible; the privacy notice says this explicitly. A private-photo migration and signed URL delivery remain future work.
+The Help page accepts feedback and account deletion requests. Admins can review these in People & access. Deletion is not automated: the Owner must confirm the person's identity, decide how historical football data should be handled, remove their Supabase Auth user in the dashboard, then mark the request resolved. Do not promise erasure of match history without reviewing foreign keys and published records first.
 
-The access audit currently records member status/role changes through `manage_member`. Other admin changes (fixtures, scores, teams, moderation) are not yet in that audit, so do not treat it as a comprehensive activity trail.
+The access audit records member status/role changes through `manage_member`. After `202609240003`, triggers also record match lifecycle/results, team edits, goal corrections, availability overrides and comment moderation. The log is admin-only and does not contain private vote identities or secrets.
+
+After `202609240003`, profile photos are kept in a private Storage bucket. The browser requests one-hour signed URLs for approved members; links remain usable by anyone who receives them until they expire. Existing stored profile URLs remain in the database for path lookup, but their public endpoints no longer return the image.
 
 The browser UI is an ergonomic layer, not the security boundary.
 
@@ -40,7 +42,7 @@ For capped matches, `set_player_availability` serializes replies on the match ro
 
 ## Notifications
 
-The migration includes per-player preferences and a provider-neutral `notification_outbox`. No email vendor is hard-coded. A deployment worker/Edge Function should consume outbox events after a provider (for example Resend, Postmark or an existing club email service) is chosen.
+The migration includes per-player preferences and a provider-neutral `notification_outbox`. `202609240003` fans out new outbox events into private in-app alerts with unread counts and member preferences. No email vendor is hard-coded and email is not sent yet. A deployment worker/Edge Function should consume outbox events after a provider (for example Resend, Postmark or an existing club email service) is chosen.
 
 ## Future game date polls
 

@@ -3,8 +3,9 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useAuth } from '@/components/auth-provider'
+import { getSupabaseBrowserClient } from '@/lib/supabase/client'
 
 const navigation = [
   { href: '/dashboard', label: 'Home', icon: '⌂' },
@@ -17,6 +18,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, profile, loading, signOut } = useAuth()
   const pathname = usePathname()
   const router = useRouter()
+  const [unread, setUnread] = useState(0)
+
+  useEffect(() => {
+    if (!profile?.id) return
+    let active = true
+    const refresh = async () => {
+      const { count, error } = await getSupabaseBrowserClient().from('in_app_notifications')
+        .select('id', { count: 'exact', head: true }).eq('recipient_id', profile.id).is('read_at', null)
+      if (active && !error) setUnread(count ?? 0)
+    }
+    void refresh()
+    window.addEventListener('caff-notifications-updated', refresh)
+    return () => { active = false; window.removeEventListener('caff-notifications-updated', refresh) }
+  }, [profile?.id, pathname])
 
   useEffect(() => {
     if (loading) return
@@ -37,6 +52,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </Link>
         <div className="topbar-actions">
           {profile.role === 'ADMIN' && <Link className="admin-link" href="/dashboard/admin">Admin</Link>}
+          <Link className="text-button notification-link" href="/dashboard/notifications" aria-label={`Notifications${unread ? `, ${unread} unread` : ''}`}>🔔<span className="notification-label">Alerts</span>{unread > 0 && <span className="notification-badge">{unread > 99 ? '99+' : unread}</span>}</Link>
           <Link className="text-button" href="/dashboard/help">Help</Link>
           <button className="text-button" onClick={signOut}>Sign out</button>
         </div>

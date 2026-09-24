@@ -15,7 +15,7 @@ export default function PrivacyPage() {
     <h2>Anonymous contributions</h2>
     <p>Other players cannot see who submitted an anonymous comment or vote. Admins can identify contributors for moderation and to prevent duplicate votes. Published ratings are aggregated and need at least three eligible ratings.</p>
     <h2>Photos and storage</h2>
-    <p>Profile photos are optional. They are stored in the club’s Supabase Storage bucket and may be accessible to someone with the photo URL, so please upload only a photo you are comfortable sharing.</p>
+    <p>Profile photos are optional. They are kept in a private Storage bucket. Approved members receive short-lived photo links when they use CAFF; anyone given one of those links may be able to open it until it expires.</p>
     <h2>Account removal</h2>
     <p>Request account removal from the Help section after signing in, or ask the group owner. An admin will review the request and explain how your account and historical match records will be handled before removal. This process is currently manual. Suspension is different: it blocks access but keeps the account for possible reinstatement.</p>
     <h2>Cookies and contact</h2>

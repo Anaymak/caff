@@ -84,7 +84,9 @@ export function generateFairTeams(players: StrengthPlayer[], attempts = 1500): G
   }
 }
 
-export function recommendSide(existing: GeneratedTeams, player: StrengthPlayer): TeamSide {
+export function recommendSide(existing: Pick<GeneratedTeams, 'bibs' | 'nonBibs'>, player: StrengthPlayer): TeamSide {
+  if (existing.bibs.length < existing.nonBibs.length) return 'BIBS'
+  if (existing.nonBibs.length < existing.bibs.length) return 'NON_BIBS'
   const onBibs = scoreSplit([...existing.bibs, player], existing.nonBibs).score
   const onNonBibs = scoreSplit(existing.bibs, [...existing.nonBibs, player]).score
   return onBibs <= onNonBibs ? 'BIBS' : 'NON_BIBS'

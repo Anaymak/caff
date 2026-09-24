@@ -42,3 +42,10 @@ test('two willing goalkeepers are distributed between balanced teams', () => {
 test('cannot generate a team sheet for one player', () => {
   assert.throws(() => generateFairTeams([player('alone')]), /At least two/)
 })
+
+test('late arrival is recommended to the smaller team first', () => {
+  const stronger = player('stronger', { overallRating: 10, ratedMatches: 5 })
+  const ordinary = player('ordinary')
+  assert.equal(recommendSide({ bibs: [stronger, ordinary], nonBibs: [ordinary] }, player('late')), 'NON_BIBS')
+  assert.equal(recommendSide({ bibs: [ordinary], nonBibs: [stronger, ordinary] }, player('late')), 'BIBS')
+})

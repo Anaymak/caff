@@ -139,7 +139,7 @@ create trigger on_auth_user_created after insert on auth.users for each row exec
 
 create or replace function public.is_admin() returns boolean language sql stable security definer set search_path=public as $$ select exists(select 1 from public.profiles where id=auth.uid() and role='ADMIN' and status='APPROVED') $$;
 create or replace function public.is_approved() returns boolean language sql stable security definer set search_path=public as $$ select exists(select 1 from public.profiles where id=auth.uid() and status='APPROVED') $$;
-create or replace function public.is_match_attendee(target_match uuid) returns boolean language sql stable security definer set search_path=public as $$ select public.is_admin() or exists(select 1 from public.match_availability where match_id=target_match and player_id=auth.uid() and status in ('PLAYING','WATCHING')) $$;
+create or replace function public.is_match_attendee(mid uuid) returns boolean language sql stable security definer set search_path=public as $$ select public.is_admin() or exists(select 1 from public.match_availability where match_id=mid and player_id=auth.uid() and status in ('PLAYING','WATCHING')) $$;
 create or replace function public.is_match_player(target_match uuid,target_player uuid) returns boolean language sql stable security definer set search_path=public as $$ select exists(select 1 from public.match_availability where match_id=target_match and player_id=target_player and status='PLAYING') $$;
 grant execute on function public.is_admin to authenticated;
 grant execute on function public.is_approved to authenticated;

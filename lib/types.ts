@@ -23,8 +23,15 @@ export interface Profile {
   secondary_position: Position | null
   role: UserRole
   status: AccountStatus
+  is_owner: boolean
+  goalkeeper_willing: boolean
   comment_restricted: boolean
+  created_at: string
 }
+
+export type PublicPlayer = Pick<Profile,
+  'id' | 'full_name' | 'nickname' | 'avatar_url' | 'bio' |
+  'preferred_position' | 'secondary_position' | 'goalkeeper_willing'>
 
 export interface Venue {
   id: string
@@ -85,6 +92,7 @@ export interface StrengthPlayer {
   name: string
   preferredPosition: Position | null
   secondaryPosition: Position | null
+  goalkeeperWilling: boolean
   overallRating: number | null
   recentForm: number | null
   ratedMatches: number

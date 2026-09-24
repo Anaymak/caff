@@ -3,6 +3,7 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
+import Link from 'next/link'
 import { getSupabaseBrowserClient } from '@/lib/supabase/client'
 
 export default function AuthPage() {
@@ -64,6 +65,7 @@ export default function AuthPage() {
           <button className="primary-button" disabled={busy}>{busy ? 'Please wait…' : mode === 'signin' ? 'Sign in' : 'Create account'}</button>
           {message && <p className="form-message" role="status">{message}</p>}
         </form>
+        <p className="auth-privacy"><Link href="/privacy">Privacy notice</Link></p>
       </section>
     </main>
   )

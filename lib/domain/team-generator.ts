@@ -41,7 +41,9 @@ function scoreSplit(a: StrengthPlayer[], b: StrengthPlayer[]) {
   const bPositions = positionCounts(b)
   const positionPenalty = (Object.keys(aPositions) as Position[])
     .reduce((sum, position) => sum + Math.abs(aPositions[position] - bPositions[position]), 0) * 0.08
-  const keeperPenalty = Math.abs(aPositions.GOALKEEPER - bPositions.GOALKEEPER) * 0.25
+  const keepersA = a.filter((player) => player.goalkeeperWilling || player.preferredPosition === 'GOALKEEPER').length
+  const keepersB = b.filter((player) => player.goalkeeperWilling || player.preferredPosition === 'GOALKEEPER').length
+  const keeperPenalty = Math.abs(keepersA - keepersB) * 0.25
   return { score: ratingDifference + positionPenalty + keeperPenalty, aAverage, bAverage }
 }
 

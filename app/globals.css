@@ -22,7 +22,15 @@ h2 { letter-spacing:-.035em; }
 .auth-card { margin:clamp(1rem,3vw,2rem); background:var(--paper); border-radius:28px; padding:clamp(1.5rem,5vw,4rem); display:flex; flex-direction:column; justify-content:center; }
 .auth-card form { max-width:420px; width:100%; margin:2.5rem auto 0; }
 .auth-card h2 { font-size:2rem; margin-bottom:.35rem; }
+.auth-privacy { text-align:center; font-size:.75rem; color:var(--muted); margin:1rem 0 0; }
+.auth-privacy a { text-decoration:underline; }
+.legal-page { max-width:720px; margin:0 auto; padding:2rem 1.25rem 5rem; line-height:1.65; }
+.legal-page h1 { margin:1.5rem 0; }
+.legal-page h2 { margin:2rem 0 .5rem; }
+.legal-page p { color:#36433a; }
 label { display:grid; gap:.45rem; font-size:.82rem; font-weight:750; margin:1rem 0; }
+.inline-check { display:flex; align-items:center; gap:.7rem; }
+.inline-check input { width:22px; min-height:22px; flex:0 0 auto; accent-color:var(--green); }
 input,select,textarea { width:100%; min-height:48px; border:1px solid var(--line); background:white; color:var(--ink); border-radius:12px; padding:.75rem .9rem; }
 textarea { min-height:100px; resize:vertical; }
 .segmented { display:grid; grid-template-columns:1fr 1fr; max-width:420px; width:100%; margin:0 auto; padding:4px; background:#e7e7e1; border-radius:13px; }
@@ -76,6 +84,7 @@ textarea { min-height:100px; resize:vertical; }
 .status-playing,.status-availability_open,.status-approved { color:#175b3e; background:#dff4e9; }
 .status-watching,.status-teams_generated { color:#155b6b; background:#def1f4; }
 .status-maybe,.status-pending,.status-voting_open { color:#79500f; background:#fff0cd; }
+.status-waiting { color:#79500f; background:#fff0cd; }
 .status-not_attending,.status-cancelled,.status-rejected,.status-suspended { color:#8d2e27; background:#fae2df; }
 .availability-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:.5rem; }
 .availability-grid button { min-height:70px; border:1px solid var(--line); border-radius:12px; background:white; color:var(--ink); font-weight:750; cursor:pointer; padding:.55rem; }
@@ -103,5 +112,26 @@ textarea { min-height:100px; resize:vertical; }
 .team-bibs { border-top:5px solid var(--lime); }.team-non_bibs { border-top:5px solid var(--ink); }
 .rating-control { display:flex; align-items:center; gap:1rem; }.rating-control input { flex:1; }.rating-value { min-width:54px; font-size:1.25rem; font-weight:900; text-align:center; }
 .admin-metrics { display:grid; grid-template-columns:repeat(4,1fr); gap:.75rem; }.admin-metrics .card strong { font-size:1.8rem; display:block; }.admin-metrics .card span { color:var(--muted); font-size:.78rem; }
+.member-row { padding:1rem 0; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; gap:1rem; }
+.member-row:last-child { border-bottom:0; }
+.member-identity { display:flex; align-items:center; gap:.75rem; min-width:0; }
+.member-identity .player-copy { min-width:0; }
+.member-identity strong,.member-identity small { display:block; overflow-wrap:anywhere; }
+.member-identity small { color:var(--muted); font-size:.76rem; margin-top:.16rem; }
+.member-actions { display:flex; align-items:center; flex-wrap:wrap; justify-content:flex-end; gap:.5rem; }
+.member-actions .button-row { width:100%; justify-content:flex-end; }
+.member-actions button { min-height:42px; }
+.role-tag { font-size:.75rem; font-weight:800; padding:.3rem .5rem; background:#eef1e9; border-radius:8px; }
+.audit-entry { display:flex; align-items:center; flex-wrap:wrap; gap:.4rem .8rem; padding:.7rem 0; border-bottom:1px solid var(--line); margin:0; font-size:.84rem; }
+.audit-entry span { flex:1; min-width:10rem; }
+.audit-entry time { color:var(--muted); }
+.report-entry { padding:.9rem 0; border-bottom:1px solid var(--line); overflow-wrap:anywhere; }
+.report-entry:last-child { border-bottom:0; }
+.report-entry small { display:block; color:var(--muted); margin:.2rem 0 .55rem; }
+.report-entry p { margin:0; white-space:pre-wrap; }
+.form-strip { display:flex; flex-wrap:wrap; gap:.5rem; }.form-strip span:not(.muted) { min-width:3rem; padding:.7rem; border-radius:10px; background:#eef4e8; color:var(--green); font-weight:850; text-align:center; }
+.history-row { display:grid; grid-template-columns:4rem minmax(0,1fr) 3.5rem 2rem; align-items:center; gap:.5rem; padding:.85rem 0; border-bottom:1px solid var(--line); font-size:.85rem; }.history-row:last-child { border-bottom:0; }.history-row strong { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }.history-row time { color:var(--muted); }.history-row b { text-align:center; }
+.ranking-select { max-width:270px; margin:0 0 .5rem; }.ranking-position { width:1.4rem; text-align:center; color:var(--muted); font-weight:800; }
 .poll-card h3 { margin:0 0 .25rem; font-size:1.25rem; }.poll-options { display:grid; gap:.65rem; margin:1rem 0; }.poll-option { margin:0; grid-template-columns:auto 1fr auto; align-items:center; gap:.75rem; padding:.8rem; border:1px solid var(--line); border-radius:13px; cursor:pointer; position:relative; overflow:hidden; }.poll-option.selected { border-color:var(--green); background:#f1f7ed; }.poll-option input { width:20px; min-height:20px; accent-color:var(--green); }.poll-date { display:flex; flex-direction:column; gap:.2rem; }.poll-date small,.admin-poll small { color:var(--muted); }.poll-total { font-size:.75rem; font-weight:800; }.poll-bar { position:absolute; height:3px; left:0; right:0; bottom:0; background:#eef0ec; }.poll-bar i { display:block; height:100%; background:var(--lime); }.poll-date-builder { display:grid; gap:.6rem; margin:1rem 0; }.poll-date-builder>span { font-size:.82rem; font-weight:750; }.poll-date-builder .button-row { flex-wrap:nowrap; }.poll-date-builder input { flex:1; }.admin-poll { padding:1rem 0; border-bottom:1px solid var(--line); }.admin-poll:last-child { border-bottom:0; }.admin-poll .section-title { align-items:center; margin-bottom:.6rem; }.admin-poll .section-title strong,.admin-poll .section-title small { display:block; }.admin-poll p { display:flex; justify-content:space-between; gap:1rem; color:var(--muted); font-size:.8rem; margin:.45rem 0; }.admin-poll p strong { color:var(--ink); white-space:nowrap; }
-@media (max-width:720px) { .auth-page { grid-template-columns:1fr; }.auth-intro { min-height:38dvh; padding:2rem; }.auth-intro .brand-mark { width:76px; height:76px; margin-bottom:2.5rem; }.auth-intro h1 { font-size:3.4rem; }.auth-intro>p:last-child { display:none; }.auth-card { margin:0; border-radius:26px 26px 0 0; min-height:62dvh; }.topbar { height:62px; }.brand-logo { width:40px; height:40px; }.page-content { padding-top:1.25rem; }.grid.two,.grid.three { grid-template-columns:1fr; }.stat-row { grid-template-columns:repeat(2,1fr); }.admin-metrics { grid-template-columns:repeat(2,1fr); }.availability-grid { grid-template-columns:repeat(2,1fr); }.page-header { align-items:start; flex-direction:column; }.topbar .text-button { display:none; } }
+@media (max-width:720px) { .auth-page { grid-template-columns:1fr; }.auth-intro { min-height:38dvh; padding:2rem; }.auth-intro .brand-mark { width:76px; height:76px; margin-bottom:2.5rem; }.auth-intro h1 { font-size:3.4rem; }.auth-intro>p:last-child { display:none; }.auth-card { margin:0; border-radius:26px 26px 0 0; min-height:62dvh; }.topbar { height:62px; }.brand-logo { width:40px; height:40px; }.brand-copy { display:none; }.topbar-actions { gap:.15rem; }.topbar .text-button { font-size:.72rem; padding:.4rem; }.page-content { padding-top:1.25rem; }.grid.two,.grid.three { grid-template-columns:1fr; }.stat-row { grid-template-columns:repeat(2,1fr); }.admin-metrics { grid-template-columns:repeat(2,1fr); }.availability-grid { grid-template-columns:repeat(2,1fr); }.page-header { align-items:start; flex-direction:column; }.member-row { align-items:flex-start; flex-direction:column; }.member-actions { justify-content:flex-start; }.member-actions .button-row { justify-content:flex-start; } }
+@media (max-width:720px) { .rating-player-row { flex-wrap:wrap; }.rating-player-row .rating-control { width:100%; gap:.5rem; }.rating-player-row .rating-control input { min-width:0; }.rating-player-row .rating-control button { padding:.65rem .8rem; } }

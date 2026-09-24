@@ -13,6 +13,7 @@ export default function Dashboard() {
   const supabase = useMemo(() => getSupabaseBrowserClient(), [])
   const [match, setMatch] = useState<Match | null>(null)
   const [availability, setAvailability] = useState<Availability[]>([])
+  const [waitlist, setWaitlist] = useState<Array<{player_id:string}>>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -23,8 +24,12 @@ export default function Dashboard() {
       const nextMatch = data as Match | null
       setMatch(nextMatch)
       if (nextMatch) {
-        const response = await supabase.from('match_availability').select('*').eq('match_id', nextMatch.id)
+        const [response, queue] = await Promise.all([
+          supabase.from('match_availability').select('*').eq('match_id', nextMatch.id),
+          supabase.from('match_waitlist').select('player_id').eq('match_id', nextMatch.id),
+        ])
         setAvailability((response.data ?? []) as Availability[])
+        setWaitlist(queue.data ?? [])
       }
       setLoading(false)
     }
@@ -32,6 +37,7 @@ export default function Dashboard() {
   }, [supabase])
 
   const mine = availability.find((item) => item.player_id === profile?.id)
+  const waiting = waitlist.some((item) => item.player_id === profile?.id)
   const counts = (status: Availability['status']) => availability.filter((item) => item.status === status).length
 
   return <>
@@ -42,8 +48,8 @@ export default function Dashboard() {
       <StatusPill status={match.status} />
       <h2>{match.title}</h2>
       <div className="match-meta"><span>{new Intl.DateTimeFormat('en-GB',{weekday:'long',day:'numeric',month:'long'}).format(new Date(match.starts_at))}</span><span>{new Intl.DateTimeFormat('en-GB',{hour:'2-digit',minute:'2-digit'}).format(new Date(match.starts_at))}</span><span>{match.venue?.name ?? 'Venue TBC'}</span></div>
-      <div className="section"><p className="eyebrow" style={{color:'#c9f247'}}>YOUR STATUS</p><div className="button-row"><StatusPill status={mine?.status ?? 'No response'} /><Link className="secondary-button" href={`/dashboard/matches/${match.id}`}>{mine ? 'Change availability' : 'Respond now'} →</Link></div></div>
-      <div className="stat-row section"><div className="stat"><strong>{counts('PLAYING')}</strong><span>Playing</span></div><div className="stat"><strong>{counts('WATCHING')}</strong><span>Watching</span></div><div className="stat"><strong>{counts('MAYBE')}</strong><span>Maybe</span></div><div className="stat"><strong>{match.max_players ? Math.max(0,match.max_players-counts('PLAYING')) : '—'}</strong><span>Spaces</span></div></div>
+      <div className="section"><p className="eyebrow" style={{color:'#c9f247'}}>YOUR STATUS</p><div className="button-row"><StatusPill status={waiting?'WAITING':mine?.status ?? 'No response'} /><Link className="secondary-button" href={`/dashboard/matches/${match.id}`}>{mine||waiting ? 'Change availability' : 'Respond now'} →</Link></div></div>
+      <div className="stat-row section"><div className="stat"><strong>{counts('PLAYING')}</strong><span>Playing</span></div><div className="stat"><strong>{counts('WATCHING')}</strong><span>Watching</span></div><div className="stat"><strong>{waitlist.length}</strong><span>Waiting</span></div><div className="stat"><strong>{match.max_players ? Math.max(0,match.max_players-counts('PLAYING')) : '—'}</strong><span>Spaces</span></div></div>
       <Link className="primary-button section" style={{background:'#c9f247',color:'#101d17'}} href={`/dashboard/matches/${match.id}`}>Open match hub</Link>
     </section>}
     <DatePolls />

@@ -37,6 +37,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </Link>
         <div className="topbar-actions">
           {profile.role === 'ADMIN' && <Link className="admin-link" href="/dashboard/admin">Admin</Link>}
+          <Link className="text-button" href="/dashboard/help">Help</Link>
           <button className="text-button" onClick={signOut}>Sign out</button>
         </div>
       </header>

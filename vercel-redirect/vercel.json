@@ -6,13 +6,8 @@
   "outputDirectory": "public",
   "redirects": [
     {
-      "source": "/",
-      "destination": "https://caff.anaysprojects.com/",
-      "permanent": true
-    },
-    {
-      "source": "/:path*",
-      "destination": "https://caff.anaysprojects.com/:path*",
+      "source": "/(.*)",
+      "destination": "https://caff.anaysprojects.com/$1",
       "permanent": true
     }
   ]

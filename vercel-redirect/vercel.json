@@ -1,7 +1,19 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "buildCommand": "",
+  "installCommand": "",
+  "outputDirectory": "public",
   "redirects": [
-    { "source": "/", "destination": "https://caff.anaysprojects.com/", "permanent": true },
-    { "source": "/:path*", "destination": "https://caff.anaysprojects.com/:path*", "permanent": true }
+    {
+      "source": "/",
+      "destination": "https://caff.anaysprojects.com/",
+      "permanent": true
+    },
+    {
+      "source": "/:path*",
+      "destination": "https://caff.anaysprojects.com/:path*",
+      "permanent": true
+    }
   ]
 }

@@ -28,8 +28,8 @@ Two independent locks have to agree before money moves in a given mode:
 Test secrets live under `/caff/payments/`. Live secrets go under `/caff/payments-live/`, so they are never mixed.
 
 ## Live launch procedure (only after the owner approves)
-1. The owner verifies the CAFF Stripe account (business details, identity, payout bank) in the Stripe dashboard.
-2. In **live mode** of `acct_1UUS7nIatQExHTBt`:
+1. The owner clicks **Get live account** (shown when leaving the CAFF sandbox) and completes Stripe's business, identity and payout-bank steps. Stripe then creates the live CAFF account (new `acct_` id, separate from sandbox `acct_1UUS7nIatQExHTBt`). Check the account menu shows CAFF live (no "Sandbox" banner) before continuing.
+2. In the **live CAFF account** (not the sandbox, and never MotorPortal HQ):
    - Create a restricted key with the same 4 permissions as the test key: Checkout Sessions write, Charges and Refunds write, Payment Intents read, Balance read.
    - Create a webhook to `https://caffleague.com/api/stripe/webhook` with snapshot payloads and the same 10 events as test mode.
 3. Store SecureStrings `/caff/payments-live/STRIPE_SECRET_KEY`, `/caff/payments-live/STRIPE_WEBHOOK_SECRET` and `/caff/payments-live/SUPABASE_SERVICE_ROLE_KEY` (the Supabase key can be the same one). The owner pastes the values; agents never handle them.

@@ -2,6 +2,9 @@
 
 Dates are 2026 unless noted. "Deployed" only where there is evidence (stack update, invalidation id or live check).
 
+## 25 Oct (evening): Stripe live status re-checked
+- Owner reported verification complete; dashboard shows otherwise: CAFF still sandbox-only, "Get live account" pending (email verified only). Clarified that `acct_1UUS7nIatQExHTBt` is the CAFF sandbox. No keys, webhooks, AWS parameters or payment settings changed.
+
 ## 25 Oct: launch verification, card fix, pushed to GitHub
 - Pushed `pitch-payments` to origin (16 commits; secret scan clean). `main` untouched.
 - Real-session launch check on production (session `a35c7165-…`, owner only): card amounts verified through cash part-payment and reissue; then voided, cancelled and marked test (records kept).

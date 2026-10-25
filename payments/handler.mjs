@@ -96,9 +96,13 @@ export function createHandler({ env: baseEnv = process.env, fetchImpl = globalTh
   // omitted: service role (Stripe-facing functions only).
   async function rpc(fn, args, jwt) {
     const key = jwt ? env.SUPABASE_ANON_KEY : env.SUPABASE_SERVICE_ROLE_KEY
+    const headers = { apikey: key, 'Content-Type': 'application/json' }
+    // New-style sb_publishable_/sb_secret_ keys go in apikey only; legacy JWT keys also as Bearer.
+    if (jwt) headers.Authorization = `Bearer ${jwt}`
+    else if (!key.startsWith('sb_')) headers.Authorization = `Bearer ${key}`
     const response = await fetchImpl(`${env.SUPABASE_URL}/rest/v1/rpc/${fn}`, {
       method: 'POST',
-      headers: { apikey: key, Authorization: `Bearer ${jwt ?? key}`, 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify(args),
     })
     const text = await response.text()

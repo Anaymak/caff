@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import { formatPence } from '@/lib/domain/payments'
+import { PITCH_SESSIONS_ENABLED } from '@/lib/features'
 import { getSupabaseBrowserClient } from '@/lib/supabase/client'
 
 interface Due { id: string; amount_pence: number; status: string; due_at: string | null; title: string; starts_at: string }
@@ -12,6 +13,7 @@ export function PaymentsDue() {
   const supabase = useMemo(() => getSupabaseBrowserClient(), [])
   const [due, setDue] = useState<Due[]>([])
   useEffect(() => {
+    if (!PITCH_SESSIONS_ENABLED) return
     let active = true
     // Fails quietly before the payments migration is applied.
     supabase.rpc('my_payment_requests').then(({ data, error }) => { if (active && !error) setDue((data ?? []) as Due[]) })

@@ -69,6 +69,9 @@ test('webhook: verified checkout completion fetches the actual fee and applies t
   assert.equal(applied.p_event_id, 'evt_1'); assert.equal(applied.p_object.id, 'cs_1')
   const dbCall = calls.find((c) => c.url.endsWith('stripe_apply_event'))
   assert.equal(dbCall.headers.Authorization, 'Bearer service-key')
+  const modern = fake({ 'POST https://db.example.test/rest/v1/rpc/payment_request_public': { json: { id: REQ } } })
+  await call(createHandler({ env: { ...env, SUPABASE_SERVICE_ROLE_KEY: 'sb_secret_x' }, fetchImpl: modern.fetchImpl, log: silent }), 'GET', '/api/pay/request', { query: { id: REQ } })
+  assert.equal(modern.calls[0].headers.apikey, 'sb_secret_x'); assert.equal(modern.calls[0].headers.Authorization, undefined, 'sb_secret keys are never sent as a Bearer token')
   assert.equal(calls.find((c) => c.url.includes('api.stripe.com')).headers.Authorization, 'Bearer sk_test_123')
 })
 

@@ -2,6 +2,11 @@
 
 Dates are 2026 unless noted. "Deployed" only where there is evidence (stack update, invalidation id or live check).
 
+## 25 Oct (evening): Stripe activation progressed; live tooling (`cd06818`)
+- Stripe (CAFF sandbox flow): website, description, "Accept online payments" only (Stripe Tax unticked to avoid extra fees), dashboard setup. Stopped at Activate Payments → Business type (owner-only declarations, identity, bank).
+- Payments Lambda: Owner-only `POST /api/admin/health` (mode, key type, Stripe/DB reachability, readiness; no secret values). Tests 12/12. Deployed (code 16:26 UTC, stack unchanged, test mode). Verified live: ready=true in test, anon 401.
+- `scripts/go-live.sh live|test`: checks live SecureStrings exist, change set with confirmation. Not run.
+
 ## 25 Oct (evening): Stripe live status re-checked
 - Owner reported verification complete; dashboard shows otherwise: CAFF still sandbox-only, "Get live account" pending (email verified only). Clarified that `acct_1UUS7nIatQExHTBt` is the CAFF sandbox. No keys, webhooks, AWS parameters or payment settings changed.
 

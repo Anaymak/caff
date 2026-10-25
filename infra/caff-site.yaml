@@ -19,9 +19,22 @@ Parameters:
     Type: String
     Default: ''
     Description: Route 53 hosted zone ID for DomainName (only when DomainName is set).
+  PrimaryDomainName:
+    Type: String
+    Default: ''
+    Description: >-
+      Optional primary apex domain (e.g. caffleague.com) in its own Route 53 zone. Served alongside
+      DomainName; www.<PrimaryDomainName> is also added and redirected to the apex by the URL function.
+      Requires DomainName to be set (one certificate covers all three names).
+  PrimaryHostedZoneId:
+    Type: String
+    Default: ''
+    Description: Route 53 hosted zone ID for PrimaryDomainName.
 
 Conditions:
   HasDomain: !Not [!Equals [!Ref DomainName, '']]
+  HasPrimaryDomain: !Not [!Equals [!Ref PrimaryDomainName, '']]
+  HasDomainOnly: !And [!Condition HasDomain, !Not [!Condition HasPrimaryDomain]]
 
 Resources:
   SiteBucket:
@@ -67,6 +80,23 @@ Resources:
         - DomainName: !Ref DomainName
           HostedZoneId: !Ref HostedZoneId
 
+  # Added alongside (not replacing) Certificate so the live distribution keeps a valid
+  # certificate until this one is issued. CloudFront takes one certificate, so it covers every name.
+  SiteCertificate:
+    Type: AWS::CertificateManager::Certificate
+    Condition: HasPrimaryDomain
+    Properties:
+      DomainName: !Ref PrimaryDomainName
+      SubjectAlternativeNames: [!Sub 'www.${PrimaryDomainName}', !Ref DomainName]
+      ValidationMethod: DNS
+      DomainValidationOptions:
+        - DomainName: !Ref PrimaryDomainName
+          HostedZoneId: !Ref PrimaryHostedZoneId
+        - DomainName: !Sub 'www.${PrimaryDomainName}'
+          HostedZoneId: !Ref PrimaryHostedZoneId
+        - DomainName: !Ref DomainName
+          HostedZoneId: !Ref HostedZoneId
+
   # Source of truth for this code: kept identical to infra/viewer-request.js (tests compare them).
   UrlFunction:
     Type: AWS::CloudFront::Function
@@ -82,6 +112,16 @@ Resources:
         function handler(event) {
           var request = event.request;
           var uri = request.uri;
+          var host = request.headers.host ? request.headers.host.value : '';
+          var qs = request.querystring && Object.keys(request.querystring).length
+            ? '?' + Object.keys(request.querystring).map(function (k) {
+                var v = request.querystring[k];
+                return encodeURIComponent(k) + (v && v.value !== undefined && v.value !== '' ? '=' + encodeURIComponent(v.value) : '');
+              }).join('&')
+            : '';
+          if (host.indexOf('www.') === 0) {
+            return { statusCode: 301, statusDescription: 'Moved Permanently', headers: { location: { value: 'https://' + host.substring(4) + uri + qs } } };
+          }
           var m = uri.match(DYNAMIC);
           if (m && m[2] !== '_' && m[3]) {
             uri = '/dashboard/' + m[1] + '/_' + m[3];
@@ -92,12 +132,6 @@ Resources:
           }
           var last = uri.substring(uri.lastIndexOf('/') + 1);
           if (last.indexOf('.') === -1) {
-            var qs = request.querystring && Object.keys(request.querystring).length
-              ? '?' + Object.keys(request.querystring).map(function (k) {
-                  var v = request.querystring[k];
-                  return encodeURIComponent(k) + (v && v.value !== undefined && v.value !== '' ? '=' + encodeURIComponent(v.value) : '');
-                }).join('&')
-              : '';
             return { statusCode: 301, statusDescription: 'Moved Permanently', headers: { location: { value: request.uri + '/' + qs } } };
           }
           request.uri = uri;
@@ -132,11 +166,17 @@ Resources:
         IPV6Enabled: true
         PriceClass: PriceClass_100
         DefaultRootObject: index.html
-        Aliases: !If [HasDomain, [!Ref DomainName], !Ref 'AWS::NoValue']
+        Aliases: !If
+          - HasPrimaryDomain
+          - [!Ref PrimaryDomainName, !Sub 'www.${PrimaryDomainName}', !Ref DomainName]
+          - !If [HasDomain, [!Ref DomainName], !Ref 'AWS::NoValue']
         ViewerCertificate: !If
-          - HasDomain
-          - { AcmCertificateArn: !Ref Certificate, SslSupportMethod: sni-only, MinimumProtocolVersion: TLSv1.2_2021 }
-          - { CloudFrontDefaultCertificate: true }
+          - HasPrimaryDomain
+          - { AcmCertificateArn: !Ref SiteCertificate, SslSupportMethod: sni-only, MinimumProtocolVersion: TLSv1.2_2021 }
+          - !If
+            - HasDomainOnly
+            - { AcmCertificateArn: !Ref Certificate, SslSupportMethod: sni-only, MinimumProtocolVersion: TLSv1.2_2021 }
+            - { CloudFrontDefaultCertificate: true }
         Origins:
           - Id: site
             DomainName: !GetAtt SiteBucket.RegionalDomainName
@@ -186,7 +226,26 @@ Resources:
           Type: AAAA
           AliasTarget: { DNSName: !GetAtt Distribution.DomainName, HostedZoneId: Z2FDTNDATAQYW2 }
 
+  PrimaryAliasRecords:
+    Type: AWS::Route53::RecordSetGroup
+    Condition: HasPrimaryDomain
+    Properties:
+      HostedZoneId: !Ref PrimaryHostedZoneId
+      RecordSets:
+        - Name: !Ref PrimaryDomainName
+          Type: A
+          AliasTarget: { DNSName: !GetAtt Distribution.DomainName, HostedZoneId: Z2FDTNDATAQYW2 }
+        - Name: !Ref PrimaryDomainName
+          Type: AAAA
+          AliasTarget: { DNSName: !GetAtt Distribution.DomainName, HostedZoneId: Z2FDTNDATAQYW2 }
+        - Name: !Sub 'www.${PrimaryDomainName}'
+          Type: A
+          AliasTarget: { DNSName: !GetAtt Distribution.DomainName, HostedZoneId: Z2FDTNDATAQYW2 }
+        - Name: !Sub 'www.${PrimaryDomainName}'
+          Type: AAAA
+          AliasTarget: { DNSName: !GetAtt Distribution.DomainName, HostedZoneId: Z2FDTNDATAQYW2 }
+
 Outputs:
   BucketName: { Value: !Ref SiteBucket }
   DistributionId: { Value: !Ref Distribution }
-  SiteUrl: { Value: !If [HasDomain, !Sub 'https://${DomainName}', !Sub 'https://${Distribution.DomainName}'] }
+  SiteUrl: { Value: !If [HasPrimaryDomain, !Sub 'https://${PrimaryDomainName}', !If [HasDomain, !Sub 'https://${DomainName}', !Sub 'https://${Distribution.DomainName}']] }

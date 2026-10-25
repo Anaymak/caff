@@ -1,6 +1,6 @@
 # CAFF on Vercel: redirect-only deployment (prepared 21 Oct 2026, NOT deployed)
 
-CAFF moved to AWS (https://caff.anaysprojects.com). Deploying this folder to the Vercel project `caff`
+CAFF lives at https://caffleague.com (AWS). Deploying this folder to the Vercel project `caff`
 replaces the app with permanent redirects (no functions, no build), so old `caffleague.vercel.app` /
 `caff-ecru.vercel.app` bookmarks land on the new site.
 

@@ -15,7 +15,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Website responds
-        run: test "$(curl -s -o /dev/null -w '%{http_code}' https://caff.anaysprojects.com/auth/)" = "200"
+        run: test "$(curl -s -o /dev/null -w '%{http_code}' https://caffleague.com/auth/)" = "200"
       - name: Supabase auth and database respond
         env:
           SUPABASE_URL: https://vkdsdgiecuvviaukrafa.supabase.co

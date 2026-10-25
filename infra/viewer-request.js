@@ -5,7 +5,9 @@
 //    /dashboard/player/<id>/...         -> /dashboard/player/_/...
 //    (also covers the RSC payload files the client router fetches on navigation)
 // 2. Directory URLs map to index.html; extensionless URLs redirect to the trailing-slash form.
-// 0. Any www.<host> request redirects permanently to https://<host> (www.caffleague.com -> caffleague.com).
+// 0. Every other hostname (www.caffleague.com, caff.anaysprojects.com, the cloudfront.net name) redirects
+//    permanently to https://caffleague.com with the same path and query.
+var CANONICAL_HOST = 'caffleague.com';
 var DYNAMIC = /^\/dashboard\/(admin\/matches|matches|player)\/([^\/.]+)(\/.*)?$/;
 
 function handler(event) {
@@ -18,8 +20,8 @@ function handler(event) {
         return encodeURIComponent(k) + (v && v.value !== undefined && v.value !== '' ? '=' + encodeURIComponent(v.value) : '');
       }).join('&')
     : '';
-  if (host.indexOf('www.') === 0) {
-    return { statusCode: 301, statusDescription: 'Moved Permanently', headers: { location: { value: 'https://' + host.substring(4) + uri + qs } } };
+  if (host && host !== CANONICAL_HOST) {
+    return { statusCode: 301, statusDescription: 'Moved Permanently', headers: { location: { value: 'https://' + CANONICAL_HOST + uri + qs } } };
   }
   var m = uri.match(DYNAMIC);
   if (m && m[2] !== '_' && m[3]) {

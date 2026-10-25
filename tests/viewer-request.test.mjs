@@ -30,10 +30,12 @@ test('static assets and non-dynamic pages pass through', () => {
   assert.equal(run('/dashboard/admin/people/').uri, '/dashboard/admin/people/index.html')
   assert.equal(run('/dashboard/matches/_/').uri, '/dashboard/matches/_/index.html')
 })
-test('www hosts redirect to the apex over https, keeping path and query', () => {
+test('non-canonical hosts redirect to https://caffleague.com, keeping path and query', () => {
   const r = handler({ request: { uri: '/dashboard/matches/', querystring: { a: { value: '1' } }, headers: { host: { value: 'www.caffleague.com' } } } })
   assert.equal(r.statusCode, 301); assert.equal(r.headers.location.value, 'https://caffleague.com/dashboard/matches/?a=1')
   assert.equal(handler({ request: { uri: '/', querystring: {}, headers: { host: { value: 'www.caffleague.com' } } } }).headers.location.value, 'https://caffleague.com/')
   assert.equal(handler({ request: { uri: '/auth/', querystring: {}, headers: { host: { value: 'caffleague.com' } } } }).uri, '/auth/index.html')
-  assert.equal(handler({ request: { uri: '/auth/', querystring: {}, headers: { host: { value: 'caff.anaysprojects.com' } } } }).uri, '/auth/index.html')
+  const old = handler({ request: { uri: '/dashboard/matches/' + 'abc' + '/', querystring: { type: { value: 'signup' } }, headers: { host: { value: 'caff.anaysprojects.com' } } } })
+  assert.equal(old.statusCode, 301); assert.equal(old.headers.location.value, 'https://caffleague.com/dashboard/matches/abc/?type=signup')
+  assert.equal(handler({ request: { uri: '/x.js', querystring: {}, headers: { host: { value: 'd2h2djtswdb4sj.cloudfront.net' } } } }).statusCode, 301)
 })

@@ -9,7 +9,8 @@ A members-only web app for one casual football group in London ("CAFF League"). 
 - https://caffleague.com is live and the only canonical site. [V]
 - Members, matches, availability, teams, ratings, polls, people/admin pages work signed in on caffleague.com. [V via owner's Chrome session]
 - **Pitch payments are LIVE (real money)** since 2026-10-25 late evening, with the owner's explicit approval: payments service on `/caff/payments-live/` (StripeMode live) and Payment settings → Stripe mode **Live**. [V] Earlier a £1.00 test-mode end-to-end checkout succeeded (webhook, PAID, 23p fee). [V]
-- Live verification [V 2026-10-25]: Owner health check ready=true (live/live, rk_, stripe_livemode true, database_ok); a live signed webhook (expired, unlinked, unpayable session) processed with result `checkout_expired`; no records changed. **Not yet exercised:** a CAFF-issued live pay link and a real card payment (no open requests exist; no real charge made). Rollback: Payment settings → Test and `scripts/go-live.sh test`.
+- Live verification [V 2026-10-25]: Owner health check ready=true (live/live, rk_, stripe_livemode true, database_ok); a live signed webhook (expired, unlinked, unpayable session) processed with result `checkout_expired`; no records changed. Rollback: Payment settings → Test and `scripts/go-live.sh test`.
+- **First real live payment verified [V 2026-10-25]:** owner paid £0.30 by card (Stripe GBP minimum; 10p is not possible) for session "LAUNCH TEST - first live payment 30p (Anay only)" `2fd336a8-daaa-4d4b-9787-8d36d799dc4b` (marked test; owner only), request `4acfc36d-a0b5-44a1-b337-f68b468d7136`. Stripe: Checkout complete/paid, PaymentIntent `pi_3UUXWzIatQExHTBt0BWT0X63` succeeded, one charge, fee 20p, net 10p. Webhooks `checkout.session.completed` → paid and `charge.updated` → fee_recorded (4 live deliveries, 0 failed). CAFF: request PAID once, one STRIPE payment (live, actual fee 20p, no review), share £0.30 / paid £0.30 / owes £0.00; audit: created, marked test, attendee added, requests issued. Not refunded (kept; refund only on the owner's request).
 - Test-session labelling, player payment card, sign-up redirect and the live/test guard are committed and deployed; migration `202610250002` **applied 2026-10-25** [V].
 
 ## 3. Hosting and infrastructure (AWS account 971422695222, us-east-1)
@@ -72,7 +73,8 @@ Lambda env: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SITE_URL`, `SECRETS_PATH`, `ST
 2. Production now has two sessions, both `is_test`: the Stripe test session and `a35c7165-…` "LAUNCH CHECK - player card (owner only)" (created 2026-10-25 to verify the player card on a real session, then voided, cancelled and marked test). No real sessions yet.
 4. `~/Documents` is in iCloud Drive (Optimize Mac Storage on). TypeScript's incremental cache write hung there, so `tsconfig.json` now has `incremental: false`. Keep `node_modules`, `.next` and `out` regenerable; if builds stall, check iCloud.
 3. Two Supabase SQL-editor tabs in the owner's Chrome hold unsaved placeholder text (safe to discard).
-4. Live Stripe enabled; first real payment not yet observed (watch webhook result, fee, PAID status).
+4. Live Stripe enabled and verified with a real £0.30 payment.
+10. Copy bug: the test-session banner says payments "were made in Stripe test mode and are not real money", which is wrong for a live payment in a test-flagged session (e.g. the £0.30 launch test). Fix the wording in `app/dashboard/admin/sessions/view/client.tsx` (and the sessions list badge if similar).
 5. No password reset; no admin notification of new sign-ups (admins check the Admin page).
 6. "Confirm email" off: anyone can create a pending account (approval still gates access).
 7. AWS CLI session uses root credentials (works, but an IAM admin user would be safer).
@@ -96,7 +98,7 @@ scripts/go-live.sh live|test       # switch payments-service credentials (asks f
 Local end-to-end without production: see README "Local end-to-end harness".
 
 ## 16. Next recommended task (≈15 minutes of owner time, then ≈30 minutes agent)
-Next: issue the first real payment requests for a real session and watch the first live payment (webhook delivered, request PAID, actual fee). Optional: a small real self-payment by the owner, then refund, only with the owner's approval. Rollback if anything looks wrong: Payment settings → Test and `scripts/go-live.sh test`.
+Next: invite players and issue requests for the next real session. Optional: fix the test-session banner copy (item 10). Refund of the £0.30 launch payment only if the owner asks (Admin → session → Refund).
 
 ## 17. Last verified state (2026-10-25)
 Launch check (real, non-test session, owner as the only player): the card showed £3.00 owed with a Pay £3.00 link. After £1 cash it showed paid £1.00; the stale £3 link stayed blocked server-side (bug found: the card still offered Pay £3.00, fixed and deployed). An admin reissue (confirmation required) replaced it with £2.00 and the card showed Pay £2.00. Then: payment voided with a reason (kept), request cancelled, session marked test. The audit trail has every step. Production probes: unsigned, forged and expired webhook signatures return 400; a bad pay id returns 400; a paid request's checkout returns 409; admin endpoints without a JWT return 401; anon cannot call finance RPCs or read payment tables (42501). Mobile sign-up page renders without overflow. Stripe account `acct_1UUS7nIatQExHTBt` is still unverified (dashboard: "Verify your business", "Verify your email"); live mode unavailable.

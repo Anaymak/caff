@@ -2,6 +2,11 @@
 
 Dates are 2026 unless noted. "Deployed" only where there is evidence (stack update, invalidation id or live check).
 
+## 25 Oct (late evening): first real live payment verified
+- Stripe GBP minimum is £0.30 (docs.stripe.com/currencies; CAFF enforces the same), so 30p not 10p. Owner-only session `2fd336a8…` (marked test) via the normal admin flow; one request `4acfc36d…` £0.30.
+- Owner paid with their own card. Verified: Checkout complete/paid (`cs_live_a1Msm…`), PI `pi_3UUXWzIatQExHTBt0BWT0X63` succeeded, fee 20p, net 10p; webhooks completed → paid, charge.updated → fee_recorded (0 failed); CAFF request PAID once, one payment, owes £0.00; audit trail complete. Not refunded. No code or deploy changes.
+- Found: test-session banner copy wrongly says such payments are test-mode money (follow-up).
+
 ## 25 Oct (late evening): LIVE payments enabled (owner approved)
 - Stack `caff-payments` → StripeMode live, SecretsPath `/caff/payments-live/` (change set). Payment settings → Stripe mode Live (Owner session; audit-logged).
 - Verified: Owner health ready=true (live/live, rk_, livemode true, DB ok); live signed webhook processed (`checkout_expired`, unlinked expired session, no charge); payments/requests unchanged. No real charge made; no site deploy.

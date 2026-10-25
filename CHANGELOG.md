@@ -2,6 +2,11 @@
 
 Dates are 2026 unless noted. "Deployed" only where there is evidence (stack update, invalidation id or live check).
 
+## 25 Oct (late evening): live payments prepared and verified (not enabled)
+- Stripe live (same `acct_1UUS7nIatQExHTBt`): live webhook `we_1UUVFrIatQExHTBtmOb48ulj` (10 events) and restricted key `caff-payments-lambda-live` (4 permissions; extra endpoints 403). Owner passed Stripe's email link + authenticator check and pasted the two Stripe values into AWS; the Supabase key was copied SSM-to-SSM without display.
+- SSM: `/caff/payments-live/{STRIPE_SECRET_KEY,STRIPE_WEBHOOK_SECRET,SUPABASE_SERVICE_ROLE_KEY}` (SecureString).
+- Stack `caff-payments` switched to live by change set, Owner health check ready=true in live; live webhook signature proven with an immediately-expired unlinked £1 Checkout Session (no charge): delivered, recorded `ignored_mode_mismatch` (DB test). Rolled back to test by change set: ready=true, forged webhook 400. Payment settings stayed test throughout. Tests 46/46. No site deploy.
+
 ## 25 Oct (evening): Stripe activation progressed; live tooling (`cd06818`)
 - Stripe (CAFF sandbox flow): website, description, "Accept online payments" only (Stripe Tax unticked to avoid extra fees), dashboard setup. Stopped at Activate Payments → Business type (owner-only declarations, identity, bank).
 - Payments Lambda: Owner-only `POST /api/admin/health` (mode, key type, Stripe/DB reachability, readiness; no secret values). Tests 12/12. Deployed (code 16:26 UTC, stack unchanged, test mode). Verified live: ready=true in test, anon 401.

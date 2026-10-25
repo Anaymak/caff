@@ -6,7 +6,7 @@ Supabase project `vkdsdgiecuvviaukrafa` ("CAFF Production", Free plan). Migratio
 |---|---|
 | 202609230001_caff_foundation … 202610210001_explicit_table_grants | applied before Oct 2026 [V: objects exist] |
 | 202610250001_pitch_sessions_payments | applied 2026-10-25 [V] (rollback in `supabase/rollback/`) |
-| 202610250002_test_sessions_player_history | **not applied** |
+| 202610250002_test_sessions_player_history | **not applied** (rollback `supabase/rollback/202610250002_..._down.sql`, verified on PGlite) |
 
 ## Payment schema (202610250001)
 - `pitch_sessions`: one booking with its own `pitch_cost_pence`, `fee_mode` (ABSORB / COVER_IN_PRICE), status and `calc_version` (bumped on price or chargeable-attendance changes). Migration 002 adds `is_test`.

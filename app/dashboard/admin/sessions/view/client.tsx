@@ -313,7 +313,7 @@ export default function SessionDetailPage() {
       {payments.length === 0 ? <p className="muted">Nothing received yet. Card payments appear here automatically once Stripe confirms them; record bank transfers and cash with “Record payment”.</p> : <div className="table-wrap"><table className="data-table">
         <thead><tr><th scope="col">Received</th><th scope="col">Player</th><th scope="col">Method</th><th scope="col" className="num">Amount</th><th scope="col" className="num">Fee</th><th scope="col">Details</th><th scope="col"><span className="sr-only">Actions</span></th></tr></thead>
         <tbody>{payments.map((p) => <tr key={p.id} className={p.status === 'VOID' ? 'row-muted' : ''}>
-          <td>{when(p.received_at)}</td>
+          <td>{p.method === 'STRIPE' ? when(p.received_at) : new Date(p.received_at).toLocaleDateString('en-GB', { dateStyle: 'medium' })}</td>
           <th scope="row">{nameOf(p.attendee_id)}</th>
           <td>{methodLabel[p.method]}{p.method === 'STRIPE' && p.livemode === false && <small className="muted"> test</small>}</td>
           <td className="num">{p.status === 'VOID' ? <s>{formatPence(p.amount_pence)}</s> : formatPence(p.amount_pence)}{p.refunded_pence > 0 && <small className="muted"> −{formatPence(p.refunded_pence)} refunded</small>}</td>

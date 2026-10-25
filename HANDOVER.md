@@ -53,8 +53,8 @@ Lambda env: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SITE_URL`, `SECRETS_PATH`, `ST
 ## 10. Git and deployment state (2026-10-25)
 - Local home: `~/Documents/ChatGPT/CAFF` (copied from `~/caff` on 2026-10-25 with full history; `~/caff` still exists, awaiting the owner's approval to remove). Remote `github.com/Anaymak/caff`.
 - Branch `pitch-payments` (latest commits `83695b9`, `27d21d6`, plus the docs commit after them) is the deployed line; it contains `aws-static` and `caffleague-domain`. **13 commits are not pushed to GitHub**; local `main` is 1 ahead/1 behind `origin/main`.
-- Working tree clean.
-- Deployed: site from `27d21d6` (+ `NEXT_PUBLIC_PITCH_SESSIONS=on`), from `~/Documents/ChatGPT/CAFF`, 2026-10-25, invalidation `IE6NV3RUDJHBQ5WHBA58IPN1EQ`. Lambda/stack `caff-payments` match `83695b9` (deployed 14:31 UTC before that commit, code unchanged since).
+- All commits pushed to GitHub branch `origin/pitch-payments` (2026-10-25). `main` on GitHub is unchanged and older; merging is the owner's decision.
+- Deployed: latest site from the commit "Payment card shows the owed amount…" (invalidation `IE3N8DN2E77WQ4P6DF5WENPILD`); earlier from `27d21d6` (+ `NEXT_PUBLIC_PITCH_SESSIONS=on`), from `~/Documents/ChatGPT/CAFF`, 2026-10-25, invalidation `IE6NV3RUDJHBQ5WHBA58IPN1EQ`. Lambda/stack `caff-payments` match `83695b9` (deployed 14:31 UTC before that commit, code unchanged since).
 - Stale: a prunable worktree for `keepalive-workflow` under /private/tmp.
 
 ## 11. Key decisions (why)
@@ -69,7 +69,8 @@ Lambda env: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SITE_URL`, `SECRETS_PATH`, `ST
 
 ## 13. Known issues, risks, gaps
 1. 13 unpushed commits: GitHub is not a full backup. Owner decision to push.
-2. Production has only the test session; the player payment card has been verified live only in its empty state (real rendering covered by PGlite tests).
+2. Production now has two sessions, both `is_test`: the Stripe test session and `a35c7165-…` "LAUNCH CHECK - player card (owner only)" (created 2026-10-25 to verify the player card on a real session, then voided, cancelled and marked test). No real sessions yet.
+4. `~/Documents` is in iCloud Drive (Optimize Mac Storage on). TypeScript's incremental cache write hung there, so `tsconfig.json` now has `incremental: false`. Keep `node_modules`, `.next` and `out` regenerable; if builds stall, check iCloud.
 3. Two Supabase SQL-editor tabs in the owner's Chrome hold unsaved placeholder text (safe to discard).
 4. Live Stripe blocked on account verification (owner only).
 5. No password reset; no admin notification of new sign-ups (admins check the Admin page).
@@ -95,5 +96,6 @@ Local end-to-end without production: see README "Local end-to-end harness".
 Owner: verify the CAFF Stripe account ("Verify your business" in the Stripe dashboard). Then, with explicit approval, follow the live launch procedure in `docs/payments-security.md`. Optionally first: invite one real player to sign up, approve them, add them to a real session and check their dashboard card (≈10 min).
 
 ## 17. Last verified state (2026-10-25)
+Launch check (real, non-test session, owner as the only player): the card showed £3.00 owed with a Pay £3.00 link. After £1 cash it showed paid £1.00; the stale £3 link stayed blocked server-side (bug found: the card still offered Pay £3.00, fixed and deployed). An admin reissue (confirmation required) replaced it with £2.00 and the card showed Pay £2.00. Then: payment voided with a reason (kept), request cancelled, session marked test. The audit trail has every step. Production probes: unsigned, forged and expired webhook signatures return 400; a bad pay id returns 400; a paid request's checkout returns 409; admin endpoints without a JWT return 401; anon cannot call finance RPCs or read payment tables (42501). Mobile sign-up page renders without overflow. Stripe account `acct_1UUS7nIatQExHTBt` is still unverified (dashboard: "Verify your business", "Verify your email"); live mode unavailable.
 Migration 002 verified in production: is_test column (boolean, default false), test session flagged, both new functions present, authenticated may execute and anon may not, counts unchanged (1 session, 1 payment, 1 request, 12 audit, 9 profiles, 1 match), stripe_mode test. Live checks: admin Sessions page hides the test session from Upcoming/All and shows it under Test sessions with a badge; session page shows the test banner and keeps its records; owner dashboard shows no pitch card (only a test session) and `my_pitch_payments` returns 200 with 0 rows; sign-in page shows How CAFF works; www/caff.anaysprojects.com/vercel.app redirect to caffleague.com.
 Earlier: 45/45 automated tests, typecheck, lint, production build in `~/Documents/ChatGPT/CAFF`; live redirects/HTTPS for all five hostnames; owner sign-in and admin pages on caffleague.com; £1 Stripe test checkout → webhook → PAID with actual fee. Unverified: a real new-player sign-up and approval on production, the second admin's view, Supabase keep-alive, any live-mode behaviour.

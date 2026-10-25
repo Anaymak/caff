@@ -2,6 +2,13 @@
 
 Dates are 2026 unless noted. "Deployed" only where there is evidence (stack update, invalidation id or live check).
 
+## 25 Oct: launch verification, card fix, pushed to GitHub
+- Pushed `pitch-payments` to origin (16 commits; secret scan clean). `main` untouched.
+- Real-session launch check on production (session `a35c7165-…`, owner only): card amounts verified through cash part-payment and reissue; then voided, cancelled and marked test (records kept).
+- Fixed: the card offered the stale full amount after a part-payment (server already blocked it); manual payments show date only. `tsconfig` incremental off (iCloud stall). Tests 45/45, tsc, lint, build. Deployed (invalidation `IE3N8DN2E77WQ4P6DF5WENPILD`).
+- Production security probes passed (webhook signatures, pay-link validation, paid-request 409, admin 401, anon 42501). Mobile sign-up verified.
+- Stripe live: account still unverified; no live keys, webhook or settings changed.
+
 ## 25 Oct: migration 202610250002 applied; site deployed from ~/Documents/ChatGPT/CAFF
 - Committed `83695b9` (launch prep + handover docs) and `27d21d6` (rollback for 002, PGlite-verified to restore exactly).
 - Applied 002 once via the Supabase SQL editor (SHA-256 `e608d81e…` matched). Verified: is_test column, test session flagged, 2 new functions, grants (authenticated yes, anon no), counts unchanged, stripe_mode test.

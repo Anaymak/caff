@@ -15,7 +15,7 @@ export default function PendingPage() {
   }, [loading, profile, router, user])
 
   return <main className="center-screen pending-screen">
-    <Image className="brand-mark" src="/brand/caff-logo.png" alt="CAFF League" width={96} height={96} priority />
+    <Image className="brand-mark" src="/brand/caff-logo-288.png" alt="CAFF League" width={96} height={96} priority />
     <StatusPill status={profile?.status ?? 'PENDING'} />
     <h1>{profile?.status === 'SUSPENDED' ? 'Account suspended' : profile?.status === 'REJECTED' ? 'Access not approved' : 'You’re on the team sheet'}</h1>
     <p>{profile?.status === 'PENDING' || !profile ? 'Your account is awaiting admin approval. We’ll let you in as soon as it has been reviewed.' : 'Please contact a CAFF admin if you think this is a mistake.'}</p>

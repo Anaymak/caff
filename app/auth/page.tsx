@@ -46,15 +46,15 @@ export default function AuthPage() {
   return (
     <main className="auth-page">
       <section className="auth-intro">
-        <Image className="brand-mark" src="/brand/caff-logo.png" alt="CAFF League" width={96} height={96} priority />
+        <Image className="brand-mark" src="/brand/caff-logo-288.png" alt="CAFF League" width={96} height={96} priority />
         <p className="eyebrow">CASUAL FOOTBALL, SORTED</p>
         <h1>Your game.<br />Your people.</h1>
         <p>Availability, balanced teams, results and bragging rights—all in one place.</p>
       </section>
       <section className="auth-card">
-        <div className="segmented" role="tablist">
-          <button className={mode === 'signin' ? 'active' : ''} onClick={() => setMode('signin')}>Sign in</button>
-          <button className={mode === 'signup' ? 'active' : ''} onClick={() => setMode('signup')}>Join CAFF</button>
+        <div className="segmented" role="group" aria-label="Sign in or join">
+          <button type="button" aria-pressed={mode === 'signin'} className={mode === 'signin' ? 'active' : ''} onClick={() => { setMode('signin'); setMessage('') }}>Sign in</button>
+          <button type="button" aria-pressed={mode === 'signup'} className={mode === 'signup' ? 'active' : ''} onClick={() => { setMode('signup'); setMessage('') }}>Join CAFF</button>
         </div>
         <form onSubmit={submit}>
           <h2>{mode === 'signin' ? 'Welcome back' : 'Create your account'}</h2>
@@ -63,7 +63,7 @@ export default function AuthPage() {
           <label>Email<input required type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} /></label>
           <label>Password<input required minLength={8} type="password" autoComplete={mode === 'signin' ? 'current-password' : 'new-password'} value={password} onChange={(event) => setPassword(event.target.value)} /></label>
           <button className="primary-button" disabled={busy}>{busy ? 'Please wait…' : mode === 'signin' ? 'Sign in' : 'Create account'}</button>
-          {message && <p className="form-message" role="status">{message}</p>}
+          {message && <p className="form-message" role="status" aria-live="polite">{message}</p>}
         </form>
         <p className="auth-privacy"><Link href="/privacy">Privacy notice</Link></p>
       </section>

@@ -4,8 +4,11 @@ const labels: Record<string, string> = {
   FINALISED: 'Final', CANCELLED: 'Cancelled', DRAFT: 'Draft', PLAYED: 'Played',
   PENDING: 'Pending', APPROVED: 'Approved', REJECTED: 'Rejected', SUSPENDED: 'Suspended',
   WAITING: 'Waiting list',
+  PLANNING: 'Planning', OPEN: 'Open', CONFIRMED: 'Confirmed', COMPLETED: 'Completed', UNCONFIRMED: 'Not confirmed',
+  FAILED: 'Failed', PAID: 'Paid', MANUALLY_PAID: 'Paid manually', REFUNDED: 'Refunded', SUPERSEDED: 'Replaced',
+  SUCCEEDED: 'Received', VOID: 'Void',
 }
 
 export function StatusPill({ status }: { status: string }) {
-  return <span className={`status-pill status-${status.toLowerCase()}`}>{labels[status] ?? status}</span>
+  return <span className={`status-pill status-${status.toLowerCase().replace(/\s+/g, '_')}`}>{labels[status] ?? status}</span>
 }

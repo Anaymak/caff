@@ -19,9 +19,16 @@ Parameters:
     Type: String
     Default: ''
     Description: Route 53 hosted zone ID for DomainName (only when DomainName is set).
+  PaymentsApiDomain:
+    Type: String
+    Default: ''
+    Description: >-
+      Optional. FunctionUrlDomain output of the caff-payments stack (xxxx.lambda-url.us-east-1.on.aws).
+      When set, /api/* is forwarded uncached to the payments Lambda (same origin: no CORS or CSP change).
 
 Conditions:
   HasDomain: !Not [!Equals [!Ref DomainName, '']]
+  HasPaymentsApi: !Not [!Equals [!Ref PaymentsApiDomain, '']]
 
 Resources:
   SiteBucket:
@@ -142,9 +149,27 @@ Resources:
             DomainName: !GetAtt SiteBucket.RegionalDomainName
             OriginAccessControlId: !GetAtt OriginAccess.Id
             S3OriginConfig: { OriginAccessIdentity: '' }
+          - !If
+            - HasPaymentsApi
+            - Id: payments-api
+              DomainName: !Ref PaymentsApiDomain
+              CustomOriginConfig: { OriginProtocolPolicy: https-only, OriginSSLProtocols: [TLSv1.2] }
+            - !Ref AWS::NoValue
         CustomErrorResponses:
           - { ErrorCode: 403, ResponseCode: 404, ResponsePagePath: /404.html, ErrorCachingMinTTL: 60 }
           - { ErrorCode: 404, ResponseCode: 404, ResponsePagePath: /404.html, ErrorCachingMinTTL: 60 }
+        CacheBehaviors: !If
+          - HasPaymentsApi
+          - - PathPattern: /api/*
+              TargetOriginId: payments-api
+              ViewerProtocolPolicy: https-only
+              Compress: false
+              AllowedMethods: [GET, HEAD, OPTIONS, PUT, PATCH, POST, DELETE]
+              CachedMethods: [GET, HEAD]
+              CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad          # Managed-CachingDisabled
+              OriginRequestPolicyId: b689b0a8-53d0-40ab-baf2-68738e2966ac  # Managed-AllViewerExceptHostHeader
+              ResponseHeadersPolicyId: !Ref HeadersPolicy
+          - !Ref AWS::NoValue
         DefaultCacheBehavior:
           TargetOriginId: site
           ViewerProtocolPolicy: redirect-to-https

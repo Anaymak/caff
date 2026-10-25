@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '@/components/auth-provider'
 import { StatusPill } from '@/components/status-pill'
 import { DatePolls } from '@/components/date-polls'
+import { PaymentsDue } from '@/components/payments-due'
 import { getSupabaseBrowserClient } from '@/lib/supabase/client'
 import type { Availability, Match } from '@/lib/types'
 
@@ -76,6 +77,7 @@ export default function Dashboard() {
       <div className="stat-row section"><div className="stat"><strong>{counts('PLAYING')}</strong><span>Playing</span></div><div className="stat"><strong>{counts('WATCHING')}</strong><span>Watching</span></div><div className="stat"><strong>{waitlist.length}</strong><span>Waiting</span></div><div className="stat"><strong>{match.max_players ? Math.max(0,match.max_players-counts('PLAYING')) : '—'}</strong><span>Spaces</span></div></div>
       <Link className="primary-button section" style={{background:'#c9f247',color:'#101d17'}} href={`/dashboard/matches/${match.id}`}>Open match hub</Link>
     </section>}
+    <PaymentsDue />
     <DatePolls />
     <section className="grid two section"><Link className="card" href="/dashboard/matches"><p className="eyebrow">FIXTURES</p><h2>Matches</h2><p className="muted">Upcoming games and match history →</p></Link><Link className="card" href="/dashboard/players"><p className="eyebrow">SQUAD</p><h2>Players</h2><p className="muted">Form, ratings and player records →</p></Link></section>
   </>

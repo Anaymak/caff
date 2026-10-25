@@ -57,3 +57,22 @@ npm run build
 ```
 
 The app intentionally uses system fonts, avoiding a network dependency during builds. The manifest and installable app icons use the supplied CAFF League artwork.
+
+## Pitch bookings and payments
+
+Admin → **Sessions & payments**. Create a session with its own pitch cost, add or import players, confirm attendance, then **Review & issue** payment requests. Each player gets a personal link (`/pay/?r=<request id>`) that opens Stripe-hosted Checkout. Players are marked paid only by a verified Stripe webhook, never by the browser redirect. Bank transfers and cash are recorded manually; corrections mark the original entry void rather than deleting it.
+
+- **Money rules live in Postgres** (`supabase/migrations/202610250001_pitch_sessions_payments.sql`): integer pence, equal shares with leftover pennies spread deterministically, issued amounts snapshotted, a version check so an admin can only issue the numbers they reviewed, one payable request per player, and a confirmation step before any change that affects requested or paid amounts. All writes are `SECURITY DEFINER` functions that check permissions and write `admin_audit_log`.
+- **Permissions:** the Owner has all of them. Existing Admins were given sessions, attendance, payment requests, finance view and manual payments. Refunds and payment settings stay Owner-only until granted in **Payment settings**.
+- **Fees:** estimates use the configurable assumption (default 1.5% + 20p for each separate payment). The actual Stripe balance-transaction fee replaces the estimate when it is known. “Cover in price” raises the shared total so everyone pays the same price whatever the payment method; there is never a card surcharge.
+- **Payments API:** `payments/handler.mjs`, one dependency-free Lambda (`infra/caff-payments.yaml`) behind the existing CloudFront distribution at `/api/*`. It uses the Stripe REST API, verifies webhook signatures, and reads its secrets from SSM Parameter Store.
+
+### Setup (once, in this order)
+1. Apply the migration in the Supabase SQL editor. It runs in one transaction and is additive only.
+2. In SSM Parameter Store (us-east-1), create SecureString parameters `/caff/payments/STRIPE_SECRET_KEY` (start with `sk_test_…`), `/caff/payments/STRIPE_WEBHOOK_SECRET` and `/caff/payments/SUPABASE_SERVICE_ROLE_KEY`.
+3. Run `scripts/deploy-payments.sh`, then update the site stack with `PaymentsApiDomain=<FunctionUrlDomain output>` (all other parameters unchanged), and run `scripts/deploy-aws.sh caff-site`.
+4. In Stripe (test mode first), go to Developers → Webhooks → Add endpoint `https://caff.anaysprojects.com/api/stripe/webhook` with these events: `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`, `checkout.session.expired`, `payment_intent.payment_failed`, `charge.updated`, `charge.dispute.created`, `refund.created`, `refund.updated`, `refund.failed`. Put its signing secret in step 2's parameter.
+5. To go live, replace both Stripe parameters with live values and add a live-mode webhook endpoint. Then, as Owner, switch **Payment settings → Stripe mode** to Live. Events from the other mode are ignored. Secrets are cached for up to five minutes.
+
+### Local end-to-end harness
+`tests/e2e/mock-server.mjs` serves the static build with a Supabase stand-in (PGlite running the real migration), the real payments handler and a fake Stripe that sends signed webhooks. Build with `NEXT_PUBLIC_SUPABASE_URL=http://localhost:4310/sb NEXT_PUBLIC_SUPABASE_ANON_KEY=anon npm run build`, run `node --experimental-strip-types tests/e2e/mock-server.mjs`, and sign in as `owner@caff.test` with any password. Rebuild normally before deploying.

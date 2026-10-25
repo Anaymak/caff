@@ -40,28 +40,29 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, [loading, profile, router, user])
 
   if (loading || !user || !profile || profile.status !== 'APPROVED') {
-    return <main className="center-screen"><div className="spinner" /><p>Preparing CAFF…</p></main>
+    return <main className="center-screen" aria-busy="true"><div className="spinner" /><p>Preparing CAFF…</p></main>
   }
 
   return (
     <div className="app-frame">
+      <a className="skip-link" href="#main">Skip to content</a>
       <header className="topbar">
         <Link href="/dashboard" className="brand" aria-label="CAFF home">
-          <Image className="brand-logo" src="/brand/caff-logo.png" alt="CAFF League" width={46} height={46} priority />
+          <Image className="brand-logo" src="/brand/caff-logo-192.png" alt="" width={46} height={46} priority />
           <span className="brand-copy"><strong>CAFF</strong><small>Casual football</small></span>
         </Link>
         <div className="topbar-actions">
           {profile.role === 'ADMIN' && <Link className="admin-link" href="/dashboard/admin">Admin</Link>}
-          <Link className="text-button notification-link" href="/dashboard/notifications" aria-label={`Notifications${unread ? `, ${unread} unread` : ''}`}>🔔<span className="notification-label">Alerts</span>{unread > 0 && <span className="notification-badge">{unread > 99 ? '99+' : unread}</span>}</Link>
+          <Link className="text-button notification-link" href="/dashboard/notifications" aria-label={`Notifications${unread ? `, ${unread} unread` : ''}`}><span aria-hidden="true">🔔</span><span className="notification-label">Alerts</span>{unread > 0 && <span className="notification-badge">{unread > 99 ? '99+' : unread}</span>}</Link>
           <Link className="text-button" href="/dashboard/help">Help</Link>
-          <button className="text-button" onClick={signOut}>Sign out</button>
+          <button type="button" className="text-button" onClick={signOut}>Sign out</button>
         </div>
       </header>
-      <main className="page-content">{children}</main>
+      <main className="page-content" id="main">{children}</main>
       <nav className="bottom-nav" aria-label="Primary navigation">
         {navigation.map((item) => {
           const active = item.href === '/dashboard' ? pathname === item.href : pathname.startsWith(item.href)
-          return <Link key={item.href} href={item.href} className={active ? 'active' : ''}><span>{item.icon}</span>{item.label}</Link>
+          return <Link key={item.href} href={item.href} className={active ? 'active' : ''} aria-current={active ? 'page' : undefined}><span aria-hidden="true">{item.icon}</span>{item.label}</Link>
         })}
       </nav>
     </div>

@@ -1,0 +1,102 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  CAFF payments API (Stripe Checkout + webhook) as one Lambda with a Function URL,
+  served through the caff-site CloudFront distribution at /api/*. Secrets are SSM
+  Parameter Store SecureStrings under SecretsPath (not in this template). Pay-per-use;
+  inside the Lambda and CloudWatch free tiers at CAFF's volume. Prepared 25 Oct 2026; NOT deployed.
+
+Parameters:
+  SupabaseUrl:
+    Type: String
+    AllowedPattern: '^https://[a-z0-9]+\.supabase\.co$'
+  SupabaseAnonKey:
+    Type: String
+    Description: Public anon key (the same value shipped to every browser).
+  SiteUrl:
+    Type: String
+    Default: https://caff.anaysprojects.com
+  SecretsPath:
+    Type: String
+    Default: /caff/payments/
+    Description: >-
+      SSM path holding SecureString parameters STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET
+      and SUPABASE_SERVICE_ROLE_KEY.
+
+Resources:
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /aws/lambda/caff-payments
+      RetentionInDays: 30
+
+  Role:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: { Service: lambda.amazonaws.com }
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: caff-payments
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: [logs:CreateLogStream, logs:PutLogEvents]
+                Resource: !Sub '${LogGroup.Arn}:*'
+              - Effect: Allow
+                Action: ssm:GetParametersByPath
+                Resource: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${SecretsPath}'
+
+  Function:
+    Type: AWS::Lambda::Function
+    DependsOn: LogGroup
+    Properties:
+      FunctionName: caff-payments
+      Description: CAFF Stripe Checkout and webhook (code from payments/handler.mjs via scripts/deploy-payments.sh)
+      Runtime: nodejs22.x
+      Architectures: [arm64]
+      Handler: index.handler
+      MemorySize: 256
+      Timeout: 20
+      Role: !GetAtt Role.Arn
+      Environment:
+        Variables:
+          SUPABASE_URL: !Ref SupabaseUrl
+          SUPABASE_ANON_KEY: !Ref SupabaseAnonKey
+          SITE_URL: !Ref SiteUrl
+          SECRETS_PATH: !Ref SecretsPath
+      Code:
+        # Placeholder until scripts/deploy-payments.sh uploads payments/handler.mjs as index.mjs.
+        ZipFile: |
+          exports.handler = async () => ({ statusCode: 503, body: '{"error":"Payments are not deployed yet"}' })
+
+  FunctionUrl:
+    Type: AWS::Lambda::Url
+    Properties:
+      TargetFunctionArn: !Ref Function
+      AuthType: NONE   # public: Stripe webhooks and pay links. Every route authenticates itself.
+
+  UrlPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref Function
+      Action: lambda:InvokeFunctionUrl
+      Principal: '*'
+      FunctionUrlAuthType: NONE
+
+  UrlInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref Function
+      Action: lambda:InvokeFunction
+      Principal: '*'
+      InvokedViaFunctionUrl: true
+
+Outputs:
+  FunctionName: { Value: !Ref Function }
+  FunctionUrl: { Value: !GetAtt FunctionUrl.FunctionUrl }
+  # Pass this to the caff-site stack as PaymentsApiDomain.
+  FunctionUrlDomain: { Value: !Select [2, !Split ['/', !GetAtt FunctionUrl.FunctionUrl]] }

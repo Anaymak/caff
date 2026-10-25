@@ -14,7 +14,7 @@ Parameters:
     Description: Public anon key (the same value shipped to every browser).
   SiteUrl:
     Type: String
-    Default: https://caff.anaysprojects.com
+    Default: https://caffleague.com
   SecretsPath:
     Type: String
     Default: /caff/payments/

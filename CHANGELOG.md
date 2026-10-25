@@ -2,6 +2,10 @@
 
 Dates are 2026 unless noted. "Deployed" only where there is evidence (stack update, invalidation id or live check).
 
+## 25 Oct (late evening): LIVE payments enabled (owner approved)
+- Stack `caff-payments` → StripeMode live, SecretsPath `/caff/payments-live/` (change set). Payment settings → Stripe mode Live (Owner session; audit-logged).
+- Verified: Owner health ready=true (live/live, rk_, livemode true, DB ok); live signed webhook processed (`checkout_expired`, unlinked expired session, no charge); payments/requests unchanged. No real charge made; no site deploy.
+
 ## 25 Oct (late evening): live payments prepared and verified (not enabled)
 - Stripe live (same `acct_1UUS7nIatQExHTBt`): live webhook `we_1UUVFrIatQExHTBtmOb48ulj` (10 events) and restricted key `caff-payments-lambda-live` (4 permissions; extra endpoints 403). Owner passed Stripe's email link + authenticator check and pasted the two Stripe values into AWS; the Supabase key was copied SSM-to-SSM without display.
 - SSM: `/caff/payments-live/{STRIPE_SECRET_KEY,STRIPE_WEBHOOK_SECRET,SUPABASE_SERVICE_ROLE_KEY}` (SecureString).

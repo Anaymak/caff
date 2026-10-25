@@ -66,7 +66,7 @@ const PAGES = JSON.parse(process.env.AUDIT_PAGES)
 for (const [role, email, pages, shots] of PAGES) { await device(devices[0]); if (email) await signIn(email); else { await go('/auth/', 1000); await evaluate('localStorage.clear()') } await audit(role, pages, shots) }
 if (!quick) { // landscape spot check
   await send('Emulation.setDeviceMetricsOverride', { width: 844, height: 390, deviceScaleFactor: 3, mobile: true, screenOrientation: { type: 'landscapePrimary', angle: 90 } })
-  for (const [role, email, pages] of PAGES.slice(-1)) for (const [name, path] of pages.slice(0, 3)) { await go(path); results.push({ role, device: 'iphone-landscape-844', page: name, ...(await evaluate(METRICS)), issues: issues() }) }
+  for (const [role, , pages] of PAGES.slice(-1)) for (const [name, path] of pages.slice(0, 3)) { await go(path); results.push({ role, device: 'iphone-landscape-844', page: name, ...(await evaluate(METRICS)), issues: issues() }) }
 }
 writeFileSync(`${OUT}/results.json`, JSON.stringify(results, null, 1))
 for (const r of results) console.log([r.role, r.device, r.page, `vp=${r.layoutViewport}/${r.deviceWidth}`, `ox=${r.overflowX}`, `small=${r.small}`, `in<16=${r.inputsUnder16}`, r.issues.length ? 'ISSUES ' + r.issues.join(' | ') : '', r.smallSamples.length ? 'eg ' + r.smallSamples.join('; ') : ''].filter(Boolean).join('  '))

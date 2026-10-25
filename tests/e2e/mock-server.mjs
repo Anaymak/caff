@@ -55,6 +55,12 @@ for (const [id, email, name, role, owner] of people) await db.query('insert into
 for (const m of ['202610250001_pitch_sessions_payments.sql', '202610250002_test_sessions_player_history.sql']) await db.exec(readFileSync(join(ROOT, 'supabase/migrations', m), 'utf8'))
 const match = (await db.query(`insert into public.matches(title, starts_at) values ('Thursday Football', now() - interval '7 days') returning id`)).rows[0].id
 for (const [id] of people.slice(3, 11)) await db.query(`insert into public.match_availability values ($1, $2, 'PLAYING')`, [match, id])
+// An upcoming match open for availability, so the availability buttons can be exercised (stand-in for the real waitlist RPC).
+const openMatch = (await db.query(`insert into public.matches(title, starts_at, status, max_players, availability_deadline) values ('Sunday Kickabout', now() + interval '3 days', 'AVAILABILITY_OPEN', 10, now() + interval '2 days') returning id`)).rows[0].id
+for (const [id] of people.slice(3, 9)) await db.query(`insert into public.match_availability values ($1, $2, 'PLAYING')`, [openMatch, id])
+await db.exec(`create function public.set_player_availability(p_match uuid, p_status text) returns text language plpgsql security definer set search_path = public as $f$
+  begin insert into public.match_availability values (p_match, auth.uid(), p_status) on conflict (match_id, player_id) do update set status = excluded.status; return p_status; end $f$;
+  grant execute on function public.set_player_availability(uuid, text) to authenticated;`)
 
 const jwtFor = (sub) => `${Buffer.from('{"alg":"none"}').toString('base64url')}.${Buffer.from(JSON.stringify({ sub, role: 'authenticated', exp: Math.floor(Date.now() / 1000) + 86400 })).toString('base64url')}.sig`
 const subOf = (auth) => { try { return JSON.parse(Buffer.from((auth ?? '').split(' ')[1].split('.')[1], 'base64url')).sub } catch { return null } }

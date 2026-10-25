@@ -52,7 +52,7 @@ create function public.is_approved() returns boolean language sql stable securit
 insert into public.venues(name, address, pitch) values ('Powerleague Shoreditch', 'Braithwaite St, London', '5-a-side'), ('Goals Wembley', 'Wembley, London', '7-a-side');
 `)
 for (const [id, email, name, role, owner] of people) await db.query('insert into public.profiles(id, email, full_name, role, is_owner) values ($1,$2,$3,$4,$5)', [id, email, name, role, owner])
-await db.exec(readFileSync(join(ROOT, 'supabase/migrations/202610250001_pitch_sessions_payments.sql'), 'utf8'))
+for (const m of ['202610250001_pitch_sessions_payments.sql', '202610250002_test_sessions_player_history.sql']) await db.exec(readFileSync(join(ROOT, 'supabase/migrations', m), 'utf8'))
 const match = (await db.query(`insert into public.matches(title, starts_at) values ('Thursday Football', now() - interval '7 days') returning id`)).rows[0].id
 for (const [id] of people.slice(3, 11)) await db.query(`insert into public.match_availability values ($1, $2, 'PLAYING')`, [match, id])
 

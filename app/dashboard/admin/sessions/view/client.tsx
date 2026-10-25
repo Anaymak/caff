@@ -240,7 +240,7 @@ export default function SessionDetailPage() {
         <button className="text-button" onClick={exportCsv}>Export CSV</button>
       </div>
       {t.stale_request_count > 0 && <p className="notice notice-warn">{t.stale_request_count} issued request(s) no longer match the current split. Their amounts have not changed. Review and reissue below; links that would now overcharge are paused until you do.</p>}
-      {attendees.length === 0 ? <p className="muted">No players yet. Add them below.</p> : <div className="table-wrap"><table className="data-table">
+      {attendees.length === 0 ? <p className="muted">No players yet. Add them below.</p> : <div className="table-wrap"><table className="data-table stack-table">
         <thead><tr><th scope="col">Player</th><th scope="col">Attendance</th><th scope="col">Shares cost</th><th scope="col" className="num">Share</th>{can.finance && <><th scope="col" className="num">Paid</th><th scope="col" className="num">Owes</th><th scope="col">Request</th><th scope="col"><span className="sr-only">Actions</span></th></>}</tr></thead>
         <tbody>{attendees.map((a) => {
           const req = requests.find((r) => r.id === a.active_request_id)
@@ -248,14 +248,14 @@ export default function SessionDetailPage() {
           const stale = req && req.amount_pence !== a.outstanding_pence
           return <tr key={a.id} className={a.attendance === 'CANCELLED' ? 'row-muted' : ''}>
             <th scope="row">{a.display_name}{!a.profile_id && <small className="muted"> guest</small>}</th>
-            <td>{can.attendance && !cancelled ? <select aria-label={`Attendance for ${a.display_name}`} value={a.attendance} disabled={busy} onChange={(e) => void updateAttendee(a, e.target.value as SessionAttendee['attendance'], a.chargeable)}>
+            <td data-label="Attendance">{can.attendance && !cancelled ? <select aria-label={`Attendance for ${a.display_name}`} value={a.attendance} disabled={busy} onChange={(e) => void updateAttendee(a, e.target.value as SessionAttendee['attendance'], a.chargeable)}>
               <option value="CONFIRMED">Confirmed</option><option value="UNCONFIRMED">Not confirmed</option><option value="CANCELLED">Cancelled</option></select> : <StatusPill status={a.attendance} />}</td>
-            <td><input type="checkbox" className="table-check" aria-label={`${a.display_name} shares the cost`} checked={a.chargeable} disabled={busy || !can.attendance || cancelled} onChange={(e) => void updateAttendee(a, a.attendance, e.target.checked)} /></td>
-            <td className="num">{a.share_pence ? <>{formatPence(a.share_pence)}{a.extra_penny && <abbr title="Includes one of the leftover pennies so the shares add up exactly"> +1p</abbr>}</> : '—'}</td>
+            <td data-label="Shares cost"><input type="checkbox" className="table-check" aria-label={`${a.display_name} shares the cost`} checked={a.chargeable} disabled={busy || !can.attendance || cancelled} onChange={(e) => void updateAttendee(a, a.attendance, e.target.checked)} /></td>
+            <td className="num" data-label="Share">{a.share_pence ? <>{formatPence(a.share_pence)}{a.extra_penny && <abbr title="Includes one of the leftover pennies so the shares add up exactly"> +1p</abbr>}</> : '—'}</td>
             {can.finance && <>
-              <td className="num">{formatPence((a.paid_pence ?? 0) - (a.refunded_pence ?? 0))}</td>
-              <td className={`num ${(a.outstanding_pence ?? 0) > 0 ? 'text-warn' : ''}`}>{(a.outstanding_pence ?? 0) < 0 ? `Credit ${formatPence(-(a.outstanding_pence ?? 0))}` : formatPence(a.outstanding_pence)}</td>
-              <td>{last ? <><StatusPill status={last.status} />{req && <small className="muted"> {formatPence(req.amount_pence)}</small>}{stale && <small className="text-warn"> needs reissue</small>}{req?.last_error && <small className="text-warn" title={req.last_error}> last attempt failed</small>}</> : <span className="muted">—</span>}</td>
+              <td className="num" data-label="Paid">{formatPence((a.paid_pence ?? 0) - (a.refunded_pence ?? 0))}</td>
+              <td className={`num ${(a.outstanding_pence ?? 0) > 0 ? 'text-warn' : ''}`} data-label="Owes">{(a.outstanding_pence ?? 0) < 0 ? `Credit ${formatPence(-(a.outstanding_pence ?? 0))}` : formatPence(a.outstanding_pence)}</td>
+              <td data-label="Request">{last ? <><StatusPill status={last.status} />{req && <small className="muted"> {formatPence(req.amount_pence)}</small>}{stale && <small className="text-warn"> needs reissue</small>}{req?.last_error && <small className="text-warn" title={req.last_error}> last attempt failed</small>}</> : <span className="muted">—</span>}</td>
               <td className="row-actions">
                 {req && <button className="text-button" onClick={() => void copy(payLink(req.id), `${a.display_name}'s payment link`)}>Copy link</button>}
                 {can.manual && !cancelled && (a.outstanding_pence ?? 0) > 0 && <button className="text-button" onClick={() => setPanel({ kind: 'manual', attendee: a })}>Record payment</button>}
@@ -292,14 +292,14 @@ export default function SessionDetailPage() {
         </div>
       </div>
       {s.status === 'PLANNING' && <p className="field-help">Open or confirm the session before requesting payment.</p>}
-      {requests.length === 0 ? <p className="muted">No payment requests yet. Confirm attendance, check the split, then issue requests. Each player gets their own Stripe-hosted payment link.</p> : <div className="table-wrap"><table className="data-table">
+      {requests.length === 0 ? <p className="muted">No payment requests yet. Confirm attendance, check the split, then issue requests. Each player gets their own Stripe-hosted payment link.</p> : <div className="table-wrap"><table className="data-table stack-table">
         <thead><tr><th scope="col">Player</th><th scope="col" className="num">Amount</th><th scope="col">Status</th><th scope="col">Issued</th><th scope="col">Calculation at issue</th><th scope="col"><span className="sr-only">Actions</span></th></tr></thead>
         <tbody>{requests.map((r) => <tr key={r.id} className={['SUPERSEDED', 'CANCELLED'].includes(r.status) ? 'row-muted' : ''}>
           <th scope="row">{nameOf(r.attendee_id)}</th>
-          <td className="num">{formatPence(r.amount_pence)}</td>
-          <td><StatusPill status={r.status} />{r.closed_reason && <small className="muted"> {r.closed_reason}</small>}</td>
-          <td>{when(r.issued_at)}{r.paid_at && <small className="muted"> · paid {when(r.paid_at)}</small>}</td>
-          <td><small>{formatPence(r.calculation.allocation_total_pence)} ÷ {r.calculation.chargeable_count} → {formatPence(r.calculation.share_pence)}{r.calculation.already_paid_pence ? `, less ${formatPence(r.calculation.already_paid_pence)} paid` : ''}</small></td>
+          <td className="num" data-label="Amount">{formatPence(r.amount_pence)}</td>
+          <td data-label="Status"><StatusPill status={r.status} />{r.closed_reason && <small className="muted"> {r.closed_reason}</small>}</td>
+          <td data-label="Issued">{when(r.issued_at)}{r.paid_at && <small className="muted"> · paid {when(r.paid_at)}</small>}</td>
+          <td data-label="Calculation"><small>{formatPence(r.calculation.allocation_total_pence)} ÷ {r.calculation.chargeable_count} → {formatPence(r.calculation.share_pence)}{r.calculation.already_paid_pence ? `, less ${formatPence(r.calculation.already_paid_pence)} paid` : ''}</small></td>
           <td className="row-actions">{['PENDING', 'FAILED'].includes(r.status) && <>
             <button className="text-button" onClick={() => void copy(payLink(r.id), 'Payment link')}>Copy link</button>
             {can.request && <button className="text-button" onClick={() => { const reason = window.prompt('Why cancel this request? The link will stop working.'); if (reason?.trim()) void run('Request cancelled.', () => supabase.rpc('cancel_payment_request', { p_request: r.id, p_reason: reason })) }}>Cancel</button>}
@@ -310,15 +310,15 @@ export default function SessionDetailPage() {
 
     {can.finance && <section className="card section">
       <div className="section-title"><h2>Payments received</h2><span className="muted">{payments.filter((p) => p.status === 'SUCCEEDED').length}</span></div>
-      {payments.length === 0 ? <p className="muted">Nothing received yet. Card payments appear here automatically once Stripe confirms them; record bank transfers and cash with “Record payment”.</p> : <div className="table-wrap"><table className="data-table">
+      {payments.length === 0 ? <p className="muted">Nothing received yet. Card payments appear here automatically once Stripe confirms them; record bank transfers and cash with “Record payment”.</p> : <div className="table-wrap"><table className="data-table stack-table">
         <thead><tr><th scope="col">Received</th><th scope="col">Player</th><th scope="col">Method</th><th scope="col" className="num">Amount</th><th scope="col" className="num">Fee</th><th scope="col">Details</th><th scope="col"><span className="sr-only">Actions</span></th></tr></thead>
         <tbody>{payments.map((p) => <tr key={p.id} className={p.status === 'VOID' ? 'row-muted' : ''}>
-          <td>{p.method === 'STRIPE' ? when(p.received_at) : new Date(p.received_at).toLocaleDateString('en-GB', { dateStyle: 'medium' })}</td>
+          <td data-label="Received">{p.method === 'STRIPE' ? when(p.received_at) : new Date(p.received_at).toLocaleDateString('en-GB', { dateStyle: 'medium' })}</td>
           <th scope="row">{nameOf(p.attendee_id)}</th>
-          <td>{methodLabel[p.method]}{p.method === 'STRIPE' && p.livemode === false && <small className="muted"> test</small>}</td>
-          <td className="num">{p.status === 'VOID' ? <s>{formatPence(p.amount_pence)}</s> : formatPence(p.amount_pence)}{p.refunded_pence > 0 && <small className="muted"> −{formatPence(p.refunded_pence)} refunded</small>}</td>
-          <td className="num">{p.method !== 'STRIPE' ? '—' : p.fee_actual_pence !== null ? formatPence(p.fee_actual_pence) : <span title="Estimate until Stripe reports the actual fee">~{formatPence(p.fee_estimated_pence)}</span>}</td>
-          <td><small>
+          <td data-label="Method">{methodLabel[p.method]}{p.method === 'STRIPE' && p.livemode === false && <small className="muted"> test</small>}</td>
+          <td className="num" data-label="Amount">{p.status === 'VOID' ? <s>{formatPence(p.amount_pence)}</s> : formatPence(p.amount_pence)}{p.refunded_pence > 0 && <small className="muted"> −{formatPence(p.refunded_pence)} refunded</small>}</td>
+          <td className="num" data-label="Fee">{p.method !== 'STRIPE' ? '—' : p.fee_actual_pence !== null ? formatPence(p.fee_actual_pence) : <span title="Estimate until Stripe reports the actual fee">~{formatPence(p.fee_estimated_pence)}</span>}</td>
+          <td data-label="Details"><small>
             {p.status === 'VOID' && <span className="text-warn">Void: {p.void_reason}. </span>}
             {p.needs_review && <span className="text-warn">Review: {p.review_note}. </span>}
             {[p.reference, p.notes, p.recorded_by_name && `recorded by ${p.recorded_by_name}`].filter(Boolean).join(' · ')}

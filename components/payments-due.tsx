@@ -33,7 +33,7 @@ export function PaymentsDue() {
     {rows.map((row) => {
       const payable = canPay(row)
       const paid = row.share_pence > 0 && row.outstanding_pence <= 0
-      return <div className="player-row" key={row.session_id}>
+      return <div className="player-row payment-row" key={row.session_id}>
         <div className="player-copy">
           <strong>{row.title}</strong>
           <small>{new Date(row.starts_at).toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}{row.venue ? ` · ${row.venue}` : ''}{row.pitch ? ` · ${row.pitch}` : ''}</small>

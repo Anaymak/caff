@@ -77,3 +77,12 @@ export function testSessionNote(payments: { method: string; livemode: boolean | 
   if (card.length > 0) return `${base} Its card payments were made in Stripe test mode and are not real money.`
   return `${base} Its payment links still work and charge in the current Stripe mode.`
 }
+
+// Player-facing label for a pay link. After Stripe's redirect the webhook may lag, so a link still marked payable reads
+// Processing (never Due) until the verified webhook flips it to Paid.
+export function payStatus(link: { status: string; payable: boolean; session_status: string }, returnedFromCheckout: boolean): string {
+  if (link.session_status === 'CANCELLED') return 'CANCELLED'
+  if (returnedFromCheckout && link.payable) return 'PROCESSING'
+  if (link.payable) return link.status === 'FAILED' ? 'FAILED' : 'DUE'
+  return link.status
+}

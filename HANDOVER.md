@@ -75,6 +75,7 @@ Lambda env: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SITE_URL`, `SECRETS_PATH`, `ST
 3. Two Supabase SQL-editor tabs in the owner's Chrome hold unsaved placeholder text (safe to discard).
 4. Live Stripe enabled and verified with a real £0.30 payment.
 10. Test-session banner wording fixed in code (`testSessionNote` in `lib/domain/payments.ts`: live / test / no card payments); committed, **not deployed**.
+11. Mobile polish (2026-10-25) committed, **not deployed** (one site deploy pending owner approval): 16px form controls (no iOS zoom), session-page zoom-out bug (sr-only headers escaping `.table-wrap`), admin tables as labelled cards under 720px, 44px tap targets, pay page Due/Processing/Paid pill + Check again + back-to-dashboard, viewport-fit cover + safe-area padding, smaller logo. Verified only on the local harness with headless Chrome emulation (6 phone profiles, landscape, desktop), not on physical devices. Not exercised: an open match's availability buttons (harness has no open match; reviewed in CSS only).
 5. No password reset; no admin notification of new sign-ups (admins check the Admin page).
 6. "Confirm email" off: anyone can create a pending account (approval still gates access).
 7. AWS CLI session uses root credentials (works, but an IAM admin user would be safer).
@@ -96,6 +97,9 @@ curl -s "https://caffleague.com/api/pay/request?id=00000000-0000-4000-8000-00000
 scripts/go-live.sh live|test       # switch payments-service credentials (asks for 'yes'; owner approval required)
 ```
 Local end-to-end without production: see README "Local end-to-end harness".
+
+## 15a. Mobile audit (repeatable, local only)
+Build against the harness (`NEXT_PUBLIC_SUPABASE_URL=http://localhost:4310/sb NEXT_PUBLIC_SUPABASE_ANON_KEY=anon NEXT_PUBLIC_PITCH_SESSIONS=on npm run build`), run `node --experimental-strip-types tests/e2e/mock-server.mjs`, seed with `node tests/e2e/seed-session.mjs`, then `AUDIT_PAGES='<json>' node tests/e2e/mobile-audit.mjs <outDir>` (headless Chrome over CDP; reports layout viewport vs device width, overflow, <40px targets, <16px inputs, console/network errors; screenshots). **Rebuild with plain `npm run build` before any deploy** (the harness build points at localhost).
 
 ## 16. Next recommended task (≈15 minutes of owner time, then ≈30 minutes agent)
 Next: invite players and issue requests for the next real session. Optional: fix the test-session banner copy (item 10). Refund of the £0.30 launch payment only if the owner asks (Admin → session → Refund).

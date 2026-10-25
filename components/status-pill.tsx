@@ -6,9 +6,9 @@ const labels: Record<string, string> = {
   WAITING: 'Waiting list',
   PLANNING: 'Planning', OPEN: 'Open', CONFIRMED: 'Confirmed', COMPLETED: 'Completed', UNCONFIRMED: 'Not confirmed',
   FAILED: 'Failed', PAID: 'Paid', MANUALLY_PAID: 'Paid manually', REFUNDED: 'Refunded', SUPERSEDED: 'Replaced',
-  SUCCEEDED: 'Received', VOID: 'Void',
+  SUCCEEDED: 'Received', VOID: 'Void', DUE: 'Due', PROCESSING: 'Processing',
 }
 
-export function StatusPill({ status }: { status: string }) {
-  return <span className={`status-pill status-${status.toLowerCase().replace(/\s+/g, '_')}`}>{labels[status] ?? status}</span>
+export function StatusPill({ status, className }: { status: string; className?: string }) {
+  return <span className={`status-pill status-${status.toLowerCase().replace(/\s+/g, '_')}${className ? ` ${className}` : ''}`}>{labels[status] ?? status}</span>
 }

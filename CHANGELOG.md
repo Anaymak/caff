@@ -2,6 +2,11 @@
 
 Dates are 2026 unless noted. "Deployed" only where there is evidence (stack update, invalidation id or live check).
 
+## 25 Oct (late evening): mobile-first audit and polish (not deployed)
+- Found (local harness, headless Chrome, iPhone 320/375/390/430, Android 360/412, landscape 844, desktop 1280): admin session page widened the layout viewport to 956px on every phone (absolutely positioned sr-only table headers escaped `.table-wrap`), 1160px/921px tables in a 278px card, form controls at 13px (iOS zoom on focus), Help/Sign out 30px tall at 11.5px, 🔔 link 25px wide, nav labels 10px, sign-in form below the fold, pay-page pill unreadable on the dark panel, deadline shown after payment, long session names truncated on the player card, desktop attendance table clipped by a long guest name.
+- Fixed: `.table-wrap` positioned; `stack-table` labelled cards ≤720px (attendance, requests, payments, permissions); 16px controls; 44px targets; compact mobile sign-in intro; pay page Due/Processing/Paid/Failed pill (`payStatus`), Check again after the poll window, "Go to your CAFF dashboard"; viewport-fit cover + safe-area padding; 128px logo (75KB → 37KB per page). Harness now loads migration 002; added `tests/e2e/seed-session.mjs` and `tests/e2e/mobile-audit.mjs`.
+- Verified: 129 page/device checks with 0 overflow, 0 undersized targets, 0 inputs <16px, 0 console errors/failed requests; full player journey (dashboard → Due → fake Checkout → Processing → Paid → dashboard Paid) at 375px. Tests 48/48, tsc, lint, production build. Production payments still live; no production data touched.
+
 ## 25 Oct (late evening): test-session banner wording
 - Banner now states whether a test session holds real live card payments, test-mode payments, or none (links still charge in the current mode). `testSessionNote` + test. Tests 47/47, tsc, lint, build. Not deployed.
 

@@ -22,6 +22,9 @@ Change stacks with a change set (`create-change-set` → review → `execute-cha
 - A single ACM certificate covers all three names. The old single-name certificate still exists, unused.
 - Vercel project `caff` (team anaymaks-projects): redirect-only. Deploy with `npx vercel@latest deploy --prod` in `vercel-redirect/`, then `vercel alias set <deployment> caffleague.vercel.app`.
 
+## Local mobile audit
+See HANDOVER §15a. The harness build must never be deployed: `scripts/deploy-aws.sh` cleans and rebuilds from `.env.local`.
+
 ## Monitoring
 - No alerting is configured. Lambda logs are in `/aws/lambda/caff-payments`, kept 30 days.
 - A daily GitHub Actions health check (`.github/workflows/supabase-health.yml`) keeps Supabase Free awake. [U: whether it runs on GitHub]

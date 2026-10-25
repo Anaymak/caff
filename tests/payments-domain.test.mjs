@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { allocationTotal, estimateFee, explainSplit, formatPence, parsePounds, previewSplit, splitPence, testSessionNote } from '../lib/domain/payments.ts'
+import { allocationTotal, estimateFee, explainSplit, formatPence, parsePounds, previewSplit, splitPence, payStatus, testSessionNote } from '../lib/domain/payments.ts'
 
 const UK = { percentBps: 150, fixedPence: 20 }
 
@@ -45,4 +45,14 @@ test('test-session banner reflects the mode of its card payments', () => {
   assert.match(testSessionNote([]), /still work and charge in the current Stripe mode/)
   assert.match(testSessionNote([{ method: 'CASH', livemode: null }]), /current Stripe mode/)
   assert.doesNotMatch(testSessionNote([{ method: 'STRIPE', livemode: true }]), /not real money/)
+})
+
+test('pay link status: due, processing after checkout return, paid, failed, cancelled', () => {
+  const link = (status, payable, session_status = 'CONFIRMED') => ({ status, payable, session_status })
+  assert.equal(payStatus(link('PENDING', true), false), 'DUE')
+  assert.equal(payStatus(link('PENDING', true), true), 'PROCESSING', 'a successful redirect never reads as unpaid')
+  assert.equal(payStatus(link('PAID', false), true), 'PAID')
+  assert.equal(payStatus(link('FAILED', true), false), 'FAILED')
+  assert.equal(payStatus(link('PENDING', true, 'CANCELLED'), false), 'CANCELLED')
+  assert.equal(payStatus(link('SUPERSEDED', false), false), 'SUPERSEDED')
 })

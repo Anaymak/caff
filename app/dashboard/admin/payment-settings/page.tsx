@@ -109,11 +109,11 @@ export default function PaymentSettingsPage() {
       </section>
       {owner && <section className="card section">
         <div className="section-title"><div><h2>Admin permissions</h2><p className="muted">You (the Owner) always have every permission. Grant others only what they need.</p></div></div>
-        {admins.length === 0 ? <p className="muted">No other admins. Make someone an Admin in People & access first.</p> : <div className="table-wrap"><table className="data-table">
+        {admins.length === 0 ? <p className="muted">No other admins. Make someone an Admin in People & access first.</p> : <div className="table-wrap"><table className="data-table stack-table">
           <thead><tr><th scope="col">Admin</th>{permissionLabels.map(([key, label, description]) => <th scope="col" key={key} title={description}>{label}</th>)}</tr></thead>
           <tbody>{admins.map((person) => <tr key={person.id}><th scope="row">{person.full_name}</th>{permissionLabels.map(([key, label]) => {
             const has = grants.some((g) => g.profile_id === person.id && g.permission === key)
-            return <td key={key}><input type="checkbox" className="table-check" aria-label={`${label} for ${person.full_name}`} checked={has} disabled={busy} onChange={(e) => void toggle(person, key, e.target.checked)} /></td>
+            return <td key={key} data-label={label}><input type="checkbox" className="table-check" aria-label={`${label} for ${person.full_name}`} checked={has} disabled={busy} onChange={(e) => void toggle(person, key, e.target.checked)} /></td>
           })}</tr>)}</tbody>
         </table></div>}
       </section>}

@@ -48,7 +48,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <a className="skip-link" href="#main">Skip to content</a>
       <header className="topbar">
         <Link href="/dashboard" className="brand" aria-label="CAFF home">
-          <Image className="brand-logo" src="/brand/caff-logo-192.png" alt="" width={46} height={46} priority />
+          <Image className="brand-logo" src="/brand/caff-logo-128.png" alt="" width={46} height={46} priority />
           <span className="brand-copy"><strong>CAFF</strong><small>Casual football</small></span>
         </Link>
         <div className="topbar-actions">

@@ -14,7 +14,6 @@
 **Verification:** 46/46 tests (2026-10-25 late); earlier 45/45 tests, tsc, lint, build pass (2026-10-25). Migration 002 applied and verified; site deployed from the new folder (invalidation `IE6NV3RUDJHBQ5WHBA58IPN1EQ`); test-session exclusion, banner and redirects verified live.
 
 **Next three actions:**
-1. Invite players: sign up at https://caffleague.com, approve in Admin (~10 min).
-2. Issue payment requests for the next real session (~5 min).
-3. Fix the test-session banner copy that calls all test-session payments "not real money" (~10 min).
-3. Invite the first real players: they sign up at https://caffleague.com, you approve them in Admin (~10 min).
+1. Approve and run the single site deploy for the banner fix + mobile polish (agent, ~5 min).
+2. Invite players: they sign up at https://caffleague.com, you approve them in Admin (~10 min).
+3. Issue payment requests for the next real session (~5 min).

@@ -188,12 +188,14 @@ export default function SessionDetailPage() {
       <div className="button-row"><StatusPill status={s.status} /><Link className="secondary-button" href="/dashboard/admin/sessions">All sessions</Link></div>
     </header>
     {notice && <p className={`notice notice-${notice.tone}`} role={notice.tone === 'error' ? 'alert' : 'status'}>{notice.text}</p>}
+    {s.is_test && <p className="notice notice-warn"><strong>Test session.</strong> Kept for the record but excluded from normal session lists, player views and reporting. Payments here were made in Stripe test mode and are not real money.</p>}
     {cancelled && <p className="notice notice-warn">Cancelled{s.cancelled_reason ? `: ${s.cancelled_reason}` : ''}. Payment links no longer work. {t.gross_received_pence ? `${formatPence((t.gross_received_pence ?? 0) - (t.refunded_pence ?? 0))} received is still held and may need refunding.` : ''}</p>}
     {s.notes && <p className="card booking-notes"><strong>Booking notes</strong><span>{s.notes}</span></p>}
 
     {can.sessions && !cancelled && <div className="button-row section">
       {nextStatuses[s.status].map((status) => <button key={status} className="secondary-button" disabled={busy} onClick={() => setStatus(status)}>{statusAction[status]}</button>)}
       <button className="danger-button" disabled={busy} onClick={() => setStatus('CANCELLED')}>Cancel session</button>
+      {!s.is_test && <button className="text-button" disabled={busy} onClick={() => { if (window.confirm('Mark this as a test session? It stays on record but is hidden from normal lists, player views and reporting.')) void run('Marked as a test session.', () => supabase.rpc('set_pitch_session_test', { p_session: s.id, p_is_test: true })) }}>Mark as test</button>}
     </div>}
 
     <section className="grid two section">

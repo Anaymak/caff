@@ -158,3 +158,13 @@ test('public pay summary and unknown routes', async () => {
   assert.equal((await call(handler, 'GET', '/api/pay/request', { query: { id: 'x' } })).statusCode, 400)
   assert.equal((await call(handler, 'GET', '/api/nope')).statusCode, 404)
 })
+
+test('a deployment declared as test refuses a live key (and vice versa)', async () => {
+  const { calls, fetchImpl } = fake({})
+  for (const [mode, key] of [['test', 'sk_live_x'], ['live', 'rk_test_x']]) {
+    const handler = createHandler({ env: { ...env, STRIPE_MODE: mode, STRIPE_SECRET_KEY: key }, fetchImpl, log: silent })
+    const res = await call(handler, 'POST', '/api/pay/checkout', { body: JSON.stringify({ id: REQ }) })
+    assert.equal(res.statusCode, 503)
+  }
+  assert.equal(calls.length, 0, 'nothing reaches Stripe or the database')
+})

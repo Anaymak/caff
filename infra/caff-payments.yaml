@@ -15,9 +15,17 @@ Parameters:
   SiteUrl:
     Type: String
     Default: https://caffleague.com
+  StripeMode:
+    Type: String
+    Default: test
+    AllowedValues: [test, live]
+    Description: >-
+      Mode this deployment runs in. The function refuses a key of the other mode. Live also needs
+      SecretsPath=/caff/payments-live/ and the Owner's Payment settings switch.
   SecretsPath:
     Type: String
     Default: /caff/payments/
+    AllowedPattern: '^/caff/payments(-live)?/$'
     Description: >-
       SSM path holding SecureString parameters STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET
       and SUPABASE_SERVICE_ROLE_KEY.
@@ -68,6 +76,7 @@ Resources:
           SUPABASE_ANON_KEY: !Ref SupabaseAnonKey
           SITE_URL: !Ref SiteUrl
           SECRETS_PATH: !Ref SecretsPath
+          STRIPE_MODE: !Ref StripeMode
       Code:
         # Placeholder until scripts/deploy-payments.sh uploads payments/handler.mjs as index.mjs.
         ZipFile: |

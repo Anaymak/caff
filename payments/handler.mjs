@@ -217,6 +217,11 @@ export function createHandler({ env: baseEnv = process.env, fetchImpl = globalTh
       try { env = { ...baseEnv, ...(await loadSecrets(baseEnv.SECRETS_PATH)) }; keyMode = stripeMode(env.STRIPE_SECRET_KEY) }
       catch (error) { log.error(`payments config: ${error instanceof Error ? error.message : 'error'}`); return { statusCode: 503, headers: { 'Content-Type': 'application/json' }, body: '{"error":"Payments are not configured"}' } }
     }
+    // The deployment declares its Stripe mode; a key of the other mode is never used.
+    if (baseEnv.STRIPE_MODE && keyMode !== baseEnv.STRIPE_MODE) {
+      log.error('payments config: Stripe key mode does not match the deployment STRIPE_MODE')
+      return { statusCode: 503, headers: { 'Content-Type': 'application/json' }, body: '{"error":"Payments are not configured"}' }
+    }
     const raw = event.body ? (event.isBase64Encoded ? Buffer.from(event.body, 'base64').toString('utf8') : event.body) : ''
     try {
       let result

@@ -1,10 +1,16 @@
 # CAFF
 
+> **AI coding agents: read [`HANDOVER.md`](HANDOVER.md) first, then follow [`AGENTS.md`](AGENTS.md).** Current state: [`PROJECT_STATUS.md`](PROJECT_STATUS.md). History: [`CHANGELOG.md`](CHANGELOG.md). Technical docs: [`docs/`](docs/).
+
+Live at **https://caffleague.com**.
+
 Mobile-first football management for a casual local group. CAFF covers account approval, availability, fair Bibs/Non-Bibs generation, results, player ratings, MOTM voting, comments, player records and admin operations.
 
 ## Local setup
 
-1. Copy `.env.example` to `.env.local` and add the Supabase project URL and anon key.
+Prerequisites: Node 22, npm, and the AWS CLI (`~/.local/bin/aws`) only for deploys.
+
+1. Copy `.env.example` to `.env.local` and add the Supabase project URL and publishable key. Add `NEXT_PUBLIC_PITCH_SESSIONS=on` to show the sessions and payments pages.
 2. Apply the SQL files in `supabase/migrations/` in filename order using the Supabase SQL editor or Supabase CLI.
 3. Run `npm install` and `npm run dev`.
 4. The `202609240001` migration bootstraps the existing `anaymakwana@icloud.com` account as the protected Owner. It intentionally fails if that account does not exist; on a fresh installation, create the owner account before applying it. All subsequent accounts start as `PENDING` and can be approved in CAFF's Admin area.
@@ -51,10 +57,16 @@ Admins can open a poll with two to six proposed kick-off times, an optional venu
 ## Checks
 
 ```bash
-npm run lint
+npm ci
+npm test          # node:test, including PGlite migration tests
 npx tsc --noEmit
+npm run lint
 npm run build
 ```
+
+## Deploy (needs approval; see docs/deployment.md)
+
+`scripts/deploy-aws.sh caff-site` deploys the site and `scripts/deploy-payments.sh` deploys the payments Lambda.
 
 The app intentionally uses system fonts, avoiding a network dependency during builds. The manifest and installable app icons use the supplied CAFF League artwork.
 

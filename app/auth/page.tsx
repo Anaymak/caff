@@ -28,9 +28,11 @@ export default function AuthPage() {
     setMessage('')
     try {
       if (mode === 'signup') {
-        const { error } = await supabase.auth.signUp({ email, password, options: { data: { full_name: fullName.trim() } } })
+        const { data, error } = await supabase.auth.signUp({ email, password, options: { data: { full_name: fullName.trim() } } })
         if (error) return setMessage('We could not create your account. Check the details and try again.')
-        setMessage('Account created. Confirm your email, then an admin will approve your access.')
+        // With email confirmation off, Supabase signs the new member straight in; they then wait for approval.
+        if (data.session) { router.replace('/pending'); return }
+        setMessage('Account created. Check your email to confirm it, then an admin will approve your access.')
         return
       }
       const { error } = await supabase.auth.signInWithPassword({ email, password })
@@ -50,6 +52,11 @@ export default function AuthPage() {
         <p className="eyebrow">CASUAL FOOTBALL, SORTED</p>
         <h1>Your game.<br />Your people.</h1>
         <p>Availability, balanced teams, results and bragging rights—all in one place.</p>
+        <ol className="how-it-works" aria-label="How CAFF works">
+          <li><strong>Join</strong><span>Create an account. An admin approves new players.</span></li>
+          <li><strong>Say you’re in</strong><span>Mark your availability for each game.</span></li>
+          <li><strong>Pay your share</strong><span>The pitch cost is split equally; pay securely by card through Stripe.</span></li>
+        </ol>
       </section>
       <section className="auth-card">
         <div className="segmented" role="group" aria-label="Sign in or join">

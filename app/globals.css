@@ -261,3 +261,10 @@ details.card[open] > summary { margin-bottom:1rem; }
   .page-header .button-row { width:100%; }
   .filter-tabs .text-button { margin-left:0; }
 }
+
+.status-test { color:#4b2a86; background:#ece4fb; }
+.how-it-works { list-style:none; counter-reset:step; padding:0; margin:2rem 0 0; display:grid; gap:.9rem; max-width:520px; }
+.how-it-works li { counter-increment:step; display:grid; grid-template-columns:2rem 1fr; column-gap:.75rem; color:#c7d0cb; line-height:1.45; }
+.how-it-works li::before { content:counter(step); grid-row:span 2; width:2rem; height:2rem; border-radius:50%; display:grid; place-items:center; background:var(--lime); color:var(--ink); font-weight:900; }
+.how-it-works strong { color:white; }
+@media (max-width:720px) { .how-it-works { margin-top:1.25rem; gap:.6rem; font-size:.9rem; } }

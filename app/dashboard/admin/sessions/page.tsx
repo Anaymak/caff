@@ -17,6 +17,7 @@ const scopes = [
   { id: 'completed', label: 'Completed' },
   { id: 'cancelled', label: 'Cancelled' },
   { id: 'all', label: 'All' },
+  { id: 'test', label: 'Test sessions' },
 ] as const
 
 export default function SessionsPage() {
@@ -167,7 +168,7 @@ function SessionCard({ session: s, finance }: { session: SessionListItem; financ
   return <Link className="card session-card" href={`/dashboard/admin/sessions/view/?id=${s.id}`}>
     <div className="date-tile" aria-hidden><span>{date.toLocaleString('en-GB', { month: 'short' })}</span><strong>{date.getDate()}</strong></div>
     <div className="session-card-main">
-      <div className="session-card-title"><strong>{s.title}</strong><StatusPill status={s.status} /></div>
+      <div className="session-card-title"><strong>{s.title}</strong><StatusPill status={s.status} />{s.is_test && <span className="status-pill status-test">Test</span>}</div>
       <p className="muted">{date.toLocaleString('en-GB', { weekday: 'short', hour: '2-digit', minute: '2-digit' })} · {s.venue?.name ?? s.venue_name ?? 'Venue TBC'}{s.pitch_name ? ` · ${s.pitch_name}` : ''}</p>
       <dl className="session-figures">
         <div><dt>Pitch</dt><dd>{formatPence(s.pitch_cost_pence)}</dd></div>

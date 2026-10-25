@@ -145,6 +145,7 @@ export interface PitchSession {
   match_id: string | null
   calc_version: number
   cancelled_reason: string | null
+  is_test?: boolean
   venue?: Pick<Venue, 'name' | 'address' | 'pitch'> | null
 }
 

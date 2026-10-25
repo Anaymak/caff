@@ -1,0 +1,35 @@
+# Changelog
+
+Dates are 2026 unless noted. "Deployed" only where there is evidence (stack update, invalidation id or live check).
+
+## 25 Oct: local home and handover
+- Project copied from `~/caff` to `~/Documents/ChatGPT/CAFF` (full Git history, uncommitted work, local config; node_modules reinstalled with `npm ci`). Original left in place pending approval. Tests 45/45, tsc, lint, build passed in the new folder.
+- Added HANDOVER.md, PROJECT_STATUS.md, CHANGELOG.md, AGENTS.md, CLAUDE.md, docs/. Not committed.
+
+## 25 Oct: launch preparation (uncommitted)
+- Migration `202610250002` (test-session flag, player payment history) written and tested on PGlite (17/17 SQL tests). **Not applied.**
+- Auth page "how it works" and sign-up → /pending redirect; dashboard pitch-payments card; Test sessions filter/badge/banner. **Not deployed.**
+- Lambda refuses keys whose mode differs from `STRIPE_MODE`; stack parameter `StripeMode` and `SecretsPath` pattern. **Deployed 14:31 UTC from uncommitted code** (tests 11/11).
+
+## 25 Oct: Stripe test mode live
+- Separate Stripe account CAFF `acct_1UUS7nIatQExHTBt`; test webhook `we_1UUSB2IatQExHTBtwygzOXv4`; restricted test key; Supabase secret key `caff_payments_lambda`; three SSM SecureStrings under `/caff/payments/`.
+- Stack `caff-payments` created; `/api/*` routed via CloudFront (`PaymentsApiDomain`); site built with `NEXT_PUBLIC_PITCH_SESSIONS=on` and deployed (invalidation `IF1KM8WC7UYANMAGCT28ALMA68`).
+- Verified: £1.00 test checkout → signed webhook → request PAID, actual fee 23p, net 77p.
+
+## 25 Oct: migration 202610250001 applied (production)
+- Applied via Supabase SQL editor after SHA-256 check; verified 9 tables with RLS, functions present, test mode, existing row counts unchanged (9 users/profiles, 1 match, 3 availability, 1 venue, 9 audit rows).
+
+## 25 Oct: site release with payments UI gated (`6707a53`)
+- Sessions UI behind `NEXT_PUBLIC_PITCH_SESSIONS`; verified rollback SQL; sb_ key header fix. Deployed (invalidation `I4DRTBTLSERKA2VJ0L90ZD4M8A`); /api absent at the time.
+
+## 25 Oct: canonical domain (`2acc250`, `db94800`, `2e4f883`)
+- caffleague.com primary (ACM cert, aliases, Route 53 records); every other host 301s to it; Vercel redirect repointed; Supabase Site URL + redirect URLs updated; robots/sitemap/canonical tags; duplicate-session guard. Deployed and verified (DNS, HTTPS, redirects, signed-in admin).
+
+## 25 Oct: pitch payments system (`a19f720`)
+- Sessions, cost split, payment requests, Stripe Checkout + webhook Lambda, manual payments, refunds, fees, permissions, audit, CSV; visual polish (logos, heading hierarchy, accessibility). Tests added (PGlite SQL, Lambda, domain, e2e harness).
+
+## 21–22 Oct: AWS migration
+- Static export to S3 + CloudFront (`374493c`), caff.anaysprojects.com, Vercel redirect project (`993537b`), explicit Data API grants (`69a034c`), health-check workflow prepared (`4d418b0`).
+
+## Sep 2026 and earlier
+- Launch-ready app, membership security, player experience, private avatars, notifications, admin audit (`9b529e2` … `9e07e4b`).

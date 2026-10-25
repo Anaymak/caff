@@ -24,7 +24,7 @@ Parameters:
     Default: ''
     Description: >-
       Optional primary apex domain (e.g. caffleague.com) in its own Route 53 zone. Served alongside
-      DomainName; www.<PrimaryDomainName> is also added and redirected to the apex by the URL function.
+      DomainName; the URL function redirects every other host (www, DomainName) to CANONICAL_HOST.
       Requires DomainName to be set (one certificate covers all three names).
   PrimaryHostedZoneId:
     Type: String
@@ -107,6 +107,7 @@ Resources:
         Comment: Serve dynamic [id] routes from the prerendered "_" page; map directories to index.html
         Runtime: cloudfront-js-2.0
       FunctionCode: |
+        var CANONICAL_HOST = 'caffleague.com';
         var DYNAMIC = /^\/dashboard\/(admin\/matches|matches|player)\/([^\/.]+)(\/.*)?$/;
 
         function handler(event) {
@@ -119,8 +120,8 @@ Resources:
                 return encodeURIComponent(k) + (v && v.value !== undefined && v.value !== '' ? '=' + encodeURIComponent(v.value) : '');
               }).join('&')
             : '';
-          if (host.indexOf('www.') === 0) {
-            return { statusCode: 301, statusDescription: 'Moved Permanently', headers: { location: { value: 'https://' + host.substring(4) + uri + qs } } };
+          if (host && host !== CANONICAL_HOST) {
+            return { statusCode: 301, statusDescription: 'Moved Permanently', headers: { location: { value: 'https://' + CANONICAL_HOST + uri + qs } } };
           }
           var m = uri.match(DYNAMIC);
           if (m && m[2] !== '_' && m[3]) {

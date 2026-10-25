@@ -7,7 +7,7 @@
   "redirects": [
     {
       "source": "/(.*)",
-      "destination": "https://caff.anaysprojects.com/$1",
+      "destination": "https://caffleague.com/$1",
       "permanent": true
     }
   ]

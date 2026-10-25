@@ -11,9 +11,9 @@
 
 **Risks:** GitHub `main` lags `pitch-payments` (all pushed to `origin/pitch-payments`); project in iCloud-synced ~/Documents (incremental tsc disabled); no password reset; AWS CLI on root credentials; Supabase Free pause risk.
 
-**Verification:** 46/46 tests (2026-10-25 late); earlier 45/45 tests, tsc, lint, build pass (2026-10-25). Migration 002 applied and verified; site deployed from the new folder (invalidation `IE6NV3RUDJHBQ5WHBA58IPN1EQ`); test-session exclusion, banner and redirects verified live.
+**Verification:** site `70f2406` deployed 2026-10-25 (invalidation `I7ABWNZ2NATT4VI5YXB6VI7XGT`), mobile-checked. 46/46 tests (2026-10-25 late); earlier 45/45 tests, tsc, lint, build pass (2026-10-25). Migration 002 applied and verified; site deployed from the new folder (invalidation `IE6NV3RUDJHBQ5WHBA58IPN1EQ`); test-session exclusion, banner and redirects verified live.
 
 **Next three actions:**
-1. Approve and run the single site deploy for the banner fix + mobile polish (agent, ~5 min).
-2. Invite players: they sign up at https://caffleague.com, you approve them in Admin (~10 min).
-3. Issue payment requests for the next real session (~5 min).
+1. Invite players: they sign up at https://caffleague.com, you approve them in Admin (~10 min).
+2. Issue payment requests for the next real session (~5 min).
+3. Optional: spot-check signed-in pages on a real phone (~5 min).

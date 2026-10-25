@@ -8,13 +8,12 @@
 
 **Blockers:**
 - Live payments: CAFF Stripe account (`acct_1UUS7nIatQExHTBt`) needs owner verification in Stripe.
-- Migration `202610250002` not applied; related UI changes uncommitted and undeployed.
 
-**Risks:** 13 commits not pushed to GitHub; Lambda deployed from uncommitted code; no password reset; AWS CLI on root credentials; Supabase Free pause risk.
+**Risks:** 16 commits not pushed to GitHub; no password reset; AWS CLI on root credentials; Supabase Free pause risk.
 
-**Verification:** 45/45 tests, tsc, lint, build pass (2026-10-25, new folder). Live redirects, owner sign-in and test payment verified on production.
+**Verification:** 45/45 tests, tsc, lint, build pass (2026-10-25). Migration 002 applied and verified; site deployed from the new folder (invalidation `IE6NV3RUDJHBQ5WHBA58IPN1EQ`); test-session exclusion, banner and redirects verified live.
 
 **Next three actions:**
-1. Commit working tree; apply migration 002; deploy site (~15 min).
-2. Owner completes Stripe account verification (owner, ~15 min).
-3. Create live key + live webhook, store under `/caff/payments-live/`, switch stack and Payment settings to live after explicit approval (~30 min).
+1. Owner completes Stripe account verification (owner, ~15 min).
+2. Live key + webhook under `/caff/payments-live/`, stack and Payment settings to live, after explicit approval (~30 min).
+3. Invite a first real player and run one real-session flow in test mode (~10 min).

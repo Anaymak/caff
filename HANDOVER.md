@@ -10,7 +10,7 @@ A members-only web app for one casual football group in London ("CAFF League"). 
 - Members, matches, availability, teams, ratings, polls, people/admin pages work signed in on caffleague.com. [V via owner's Chrome session]
 - Pitch sessions & payments are **live in Stripe TEST mode** only. A £1.00 end-to-end test checkout succeeded: signed webhook received, the right player marked PAID, actual 23p fee recorded. [V]
 - **Live payments are NOT enabled.** Blocker: the CAFF Stripe account must be verified by the owner in the Stripe dashboard ("Verify your business"). [V: dashboard shows "Next, verify your account"]
-- Work in progress (uncommitted, see §10): test-session labelling, player payment history card, sign-up redirect, live/test isolation guard. Migration `202610250002` is **written but not applied**.
+- Test-session labelling, player payment card, sign-up redirect and the live/test guard are committed and deployed; migration `202610250002` **applied 2026-10-25** [V].
 
 ## 3. Hosting and infrastructure (AWS account 971422695222, us-east-1)
 - Static Next.js export on **S3 + CloudFront**, CloudFormation stack `caff-site` (`infra/caff-site.yaml`): bucket `caff-site-971422695222` (private, versioned), distribution `EGBP9DEUE6XFR` (`d2h2djtswdb4sj.cloudfront.net`), CloudFront Function `caff-static-routes` (source of truth `infra/viewer-request.js`, tests compare the two), response-headers policy `caff-security-headers` (HSTS, CSP, frame DENY). [V]
@@ -25,7 +25,7 @@ Details: `docs/deployment.md`.
 - Postgres with RLS on every table; the browser talks to it directly with the publishable key. Core tables: profiles, venues, matches, match_availability, team_assignments, ratings, motm_votes, comments, goals, game_date_*, notifications, admin_audit_log, feedback_reports, account_deletion_requests.
 - Payments tables (migration `202610250001`, **applied 2026-10-25** [V]): admin_permissions, payment_settings, pitch_sessions, session_attendees, payment_requests, payment_request_checkouts, payments, payment_refunds, stripe_events. All writes go through SECURITY DEFINER functions; the browser has SELECT only (RLS-filtered).
 - Rollback for 001: `supabase/rollback/202610250001_pitch_sessions_payments_down.sql` (removes only payment objects; verified on PGlite, not run in production).
-- Migration `202610250002_test_sessions_player_history.sql`: **NOT applied** [V]. Adds `pitch_sessions.is_test`, marks session `68e3f37d-…` as test, `set_pitch_session_test`, `my_pitch_payments`, and replaces `get_pitch_sessions` / `my_payment_requests` to hide test sessions.
+- Migration `202610250002_test_sessions_player_history.sql`: **applied 2026-10-25** (checksum-verified; rollback `supabase/rollback/202610250002_..._down.sql`, verified on PGlite) [V]. Adds `pitch_sessions.is_test`, marks session `68e3f37d-…` as test, `set_pitch_session_test`, `my_pitch_payments`, and replaces `get_pitch_sessions` / `my_payment_requests` to hide test sessions.
 - Supabase Free projects pause after ~7 days without activity; a daily health-check workflow exists on GitHub `main` [U: whether it is running].
 Details: `docs/database.md`.
 
@@ -52,9 +52,9 @@ Lambda env: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SITE_URL`, `SECRETS_PATH`, `ST
 
 ## 10. Git and deployment state (2026-10-25)
 - Local home: `~/Documents/ChatGPT/CAFF` (copied from `~/caff` on 2026-10-25 with full history; `~/caff` still exists, awaiting the owner's approval to remove). Remote `github.com/Anaymak/caff`.
-- Branch `pitch-payments` at `6707a53` is the deployed line; it contains `aws-static` and `caffleague-domain`. **13 commits are not pushed to GitHub**; local `main` is 1 ahead/1 behind `origin/main`.
-- Uncommitted on `pitch-payments`: auth page (how-it-works, sign-up redirect), payments card, sessions test filter/badge, session test banner/toggle, CSS, `lib/types.ts`, `payments/handler.mjs` + `infra/caff-payments.yaml` (STRIPE_MODE guard), tests, new migration 002, and the handover docs.
-- Deployed: site from `6707a53` + `NEXT_PUBLIC_PITCH_SESSIONS=on` (2026-10-25 ~14:15 UTC, invalidation `IF1KM8WC7UYANMAGCT28ALMA68`). **Lambda code and `caff-payments` stack were deployed 2026-10-25 14:31 UTC from the uncommitted working tree** (STRIPE_MODE guard). The uncommitted UI changes are NOT deployed and need migration 002 first.
+- Branch `pitch-payments` (latest commits `83695b9`, `27d21d6`, plus the docs commit after them) is the deployed line; it contains `aws-static` and `caffleague-domain`. **13 commits are not pushed to GitHub**; local `main` is 1 ahead/1 behind `origin/main`.
+- Working tree clean.
+- Deployed: site from `27d21d6` (+ `NEXT_PUBLIC_PITCH_SESSIONS=on`), from `~/Documents/ChatGPT/CAFF`, 2026-10-25, invalidation `IE6NV3RUDJHBQ5WHBA58IPN1EQ`. Lambda/stack `caff-payments` match `83695b9` (deployed 14:31 UTC before that commit, code unchanged since).
 - Stale: a prunable worktree for `keepalive-workflow` under /private/tmp.
 
 ## 11. Key decisions (why)
@@ -69,8 +69,8 @@ Lambda env: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SITE_URL`, `SECRETS_PATH`, `ST
 
 ## 13. Known issues, risks, gaps
 1. 13 unpushed commits: GitHub is not a full backup. Owner decision to push.
-2. Lambda deployed from uncommitted code: commit the working tree (§10).
-3. Migration 002 not applied; until it is, do NOT deploy the uncommitted UI (dashboard card calls `my_pitch_payments`).
+2. Production has only the test session; the player payment card has been verified live only in its empty state (real rendering covered by PGlite tests).
+3. Two Supabase SQL-editor tabs in the owner's Chrome hold unsaved placeholder text (safe to discard).
 4. Live Stripe blocked on account verification (owner only).
 5. No password reset; no admin notification of new sign-ups (admins check the Admin page).
 6. "Confirm email" off: anyone can create a pending account (approval still gates access).
@@ -91,8 +91,9 @@ curl -s "https://caffleague.com/api/pay/request?id=00000000-0000-4000-8000-00000
 ```
 Local end-to-end without production: see README "Local end-to-end harness".
 
-## 16. Next recommended task (≈15 minutes)
-Commit the working tree on `pitch-payments`, apply migration `202610250002` in the Supabase SQL editor (verify checksum), deploy the site (`scripts/deploy-aws.sh caff-site`), then check the dashboard card, the Test sessions filter and that the test session is hidden from Upcoming.
+## 16. Next recommended task (≈15 minutes of owner time, then ≈30 minutes agent)
+Owner: verify the CAFF Stripe account ("Verify your business" in the Stripe dashboard). Then, with explicit approval, follow the live launch procedure in `docs/payments-security.md`. Optionally first: invite one real player to sign up, approve them, add them to a real session and check their dashboard card (≈10 min).
 
 ## 17. Last verified state (2026-10-25)
-Tested: 45/45 automated tests, typecheck, lint, production build in `~/Documents/ChatGPT/CAFF`; live redirects/HTTPS for all five hostnames; owner sign-in and admin pages on caffleague.com; £1 Stripe test checkout → webhook → PAID with actual fee. Unverified: a real new-player sign-up and approval on production, the second admin's view, Supabase keep-alive, any live-mode behaviour.
+Migration 002 verified in production: is_test column (boolean, default false), test session flagged, both new functions present, authenticated may execute and anon may not, counts unchanged (1 session, 1 payment, 1 request, 12 audit, 9 profiles, 1 match), stripe_mode test. Live checks: admin Sessions page hides the test session from Upcoming/All and shows it under Test sessions with a badge; session page shows the test banner and keeps its records; owner dashboard shows no pitch card (only a test session) and `my_pitch_payments` returns 200 with 0 rows; sign-in page shows How CAFF works; www/caff.anaysprojects.com/vercel.app redirect to caffleague.com.
+Earlier: 45/45 automated tests, typecheck, lint, production build in `~/Documents/ChatGPT/CAFF`; live redirects/HTTPS for all five hostnames; owner sign-in and admin pages on caffleague.com; £1 Stripe test checkout → webhook → PAID with actual fee. Unverified: a real new-player sign-up and approval on production, the second admin's view, Supabase keep-alive, any live-mode behaviour.

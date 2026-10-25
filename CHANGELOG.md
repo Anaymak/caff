@@ -2,11 +2,16 @@
 
 Dates are 2026 unless noted. "Deployed" only where there is evidence (stack update, invalidation id or live check).
 
+## 25 Oct: migration 202610250002 applied; site deployed from ~/Documents/ChatGPT/CAFF
+- Committed `83695b9` (launch prep + handover docs) and `27d21d6` (rollback for 002, PGlite-verified to restore exactly).
+- Applied 002 once via the Supabase SQL editor (SHA-256 `e608d81e…` matched). Verified: is_test column, test session flagged, 2 new functions, grants (authenticated yes, anon no), counts unchanged, stripe_mode test.
+- Deployed site (tests 45/45, build) from the new folder; invalidation `IE6NV3RUDJHBQ5WHBA58IPN1EQ`. Verified live: test session hidden from Upcoming/All, listed under Test sessions with badge and banner, owner dashboard card empty (my_pitch_payments 200, 0 rows), How CAFF works on sign-in, redirects intact. Stripe stays in test mode.
+
 ## 25 Oct: local home and handover
 - Project copied from `~/caff` to `~/Documents/ChatGPT/CAFF` (full Git history, uncommitted work, local config; node_modules reinstalled with `npm ci`). Original left in place pending approval. Tests 45/45, tsc, lint, build passed in the new folder.
 - Added HANDOVER.md, PROJECT_STATUS.md, CHANGELOG.md, AGENTS.md, CLAUDE.md, docs/. Not committed.
 
-## 25 Oct: launch preparation (uncommitted)
+## 25 Oct: launch preparation (committed later as `83695b9`)
 - Migration `202610250002` (test-session flag, player payment history) written and tested on PGlite (17/17 SQL tests). **Not applied.**
 - Auth page "how it works" and sign-up → /pending redirect; dashboard pitch-payments card; Test sessions filter/badge/banner. **Not deployed.**
 - Lambda refuses keys whose mode differs from `STRIPE_MODE`; stack parameter `StripeMode` and `SecretsPath` pattern. **Deployed 14:31 UTC from uncommitted code** (tests 11/11).

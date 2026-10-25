@@ -123,6 +123,14 @@ test('cover-in-price mode matches the TypeScript calculation and covers the pitc
   assert.equal(t.expected_net_all_stripe_pence, 6000 - 290)
 })
 
+test('duplicate sessions are refused; a different pitch at the same time is allowed', async () => {
+  const at = new Date(Date.now() + 5 * 86400000).toISOString()
+  const make = (pitch) => rpc(ADMIN, 'create_pitch_session', ['Sunday 7s', at, 60, null, '', pitch, '', 5000, 'ABSORB', '', null, 'OPEN', null])
+  await make('Pitch 1')
+  await assert.rejects(make('pitch 1'), /already exists/)
+  await make('Pitch 2')
+})
+
 test('permissions: players and ungranted admins cannot manage sessions or read finance', async () => {
   await assert.rejects(newSession(PLAYER, 6000), /PERMISSION_DENIED/)
   await assert.rejects(newSession(NEW_ADMIN, 6000), /PERMISSION_DENIED/)

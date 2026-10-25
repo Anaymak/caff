@@ -452,6 +452,13 @@ declare new_id uuid;
 begin
   perform public.require_permission('sessions.manage');
   if p_status not in ('PLANNING','OPEN','CONFIRMED') then raise exception 'A new session starts as planning, open or confirmed'; end if;
+  -- Serialise creates so a double submit cannot make two identical sessions.
+  perform pg_advisory_xact_lock(hashtext('pitch_session:' || p_starts_at::text));
+  if exists (select 1 from public.pitch_sessions where starts_at = p_starts_at and status <> 'CANCELLED'
+             and lower(trim(title)) = lower(trim(p_title)) and venue_id is not distinct from p_venue_id
+             and lower(coalesce(pitch_name, '')) = lower(coalesce(nullif(trim(p_pitch_name), ''), ''))) then
+    raise exception 'A session with this name, kick-off, venue and pitch already exists';
+  end if;
   insert into public.pitch_sessions(title, starts_at, duration_minutes, venue_id, venue_name, pitch_name, pitch_type,
     pitch_cost_pence, fee_mode, notes, payment_deadline, status, match_id, created_by)
   values (trim(p_title), p_starts_at, p_duration_minutes, p_venue_id, nullif(trim(p_venue_name), ''), nullif(trim(p_pitch_name), ''),

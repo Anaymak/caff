@@ -2,7 +2,12 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { AuthProvider } from '@/components/auth-provider'
 
+export const SITE_URL = 'https://caffleague.com'
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
+  alternates: { canonical: '/' },
+  openGraph: { siteName: 'CAFF', url: SITE_URL, type: 'website' },
   title: { default: 'CAFF', template: '%s · CAFF' },
   description: 'Casual football, organised.',
   applicationName: 'CAFF',

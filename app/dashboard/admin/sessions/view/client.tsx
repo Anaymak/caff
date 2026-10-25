@@ -6,7 +6,7 @@ import { type FormEvent, useCallback, useEffect, useMemo, useState } from 'react
 import { useAuth } from '@/components/auth-provider'
 import { StatusPill } from '@/components/status-pill'
 import { downloadCsv } from '@/lib/csv'
-import { estimateFee, explainSplit, formatPence, parsePounds } from '@/lib/domain/payments'
+import { estimateFee, explainSplit, formatPence, parsePounds, testSessionNote } from '@/lib/domain/payments'
 import { friendlyError, payLink, paymentsApi, rpcWithConfirm } from '@/lib/payments-api'
 import { getSupabaseBrowserClient } from '@/lib/supabase/client'
 import type { Payment, Profile, SessionAttendee, SessionDetail, SessionStatus } from '@/lib/types'
@@ -188,7 +188,7 @@ export default function SessionDetailPage() {
       <div className="button-row"><StatusPill status={s.status} /><Link className="secondary-button" href="/dashboard/admin/sessions">All sessions</Link></div>
     </header>
     {notice && <p className={`notice notice-${notice.tone}`} role={notice.tone === 'error' ? 'alert' : 'status'}>{notice.text}</p>}
-    {s.is_test && <p className="notice notice-warn"><strong>Test session.</strong> Kept for the record but excluded from normal session lists, player views and reporting. Payments here were made in Stripe test mode and are not real money.</p>}
+    {s.is_test && <p className="notice notice-warn"><strong>Test session.</strong> {testSessionNote(payments)}</p>}
     {cancelled && <p className="notice notice-warn">Cancelled{s.cancelled_reason ? `: ${s.cancelled_reason}` : ''}. Payment links no longer work. {t.gross_received_pence ? `${formatPence((t.gross_received_pence ?? 0) - (t.refunded_pence ?? 0))} received is still held and may need refunding.` : ''}</p>}
     {s.notes && <p className="card booking-notes"><strong>Booking notes</strong><span>{s.notes}</span></p>}
 

@@ -74,7 +74,7 @@ Lambda env: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SITE_URL`, `SECRETS_PATH`, `ST
 4. `~/Documents` is in iCloud Drive (Optimize Mac Storage on). TypeScript's incremental cache write hung there, so `tsconfig.json` now has `incremental: false`. Keep `node_modules`, `.next` and `out` regenerable; if builds stall, check iCloud.
 3. Two Supabase SQL-editor tabs in the owner's Chrome hold unsaved placeholder text (safe to discard).
 4. Live Stripe enabled and verified with a real £0.30 payment.
-10. Copy bug: the test-session banner says payments "were made in Stripe test mode and are not real money", which is wrong for a live payment in a test-flagged session (e.g. the £0.30 launch test). Fix the wording in `app/dashboard/admin/sessions/view/client.tsx` (and the sessions list badge if similar).
+10. Test-session banner wording fixed in code (`testSessionNote` in `lib/domain/payments.ts`: live / test / no card payments); committed, **not deployed**.
 5. No password reset; no admin notification of new sign-ups (admins check the Admin page).
 6. "Confirm email" off: anyone can create a pending account (approval still gates access).
 7. AWS CLI session uses root credentials (works, but an IAM admin user would be safer).

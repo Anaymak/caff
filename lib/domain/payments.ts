@@ -68,3 +68,12 @@ export function explainSplit(total: number, count: number): string {
   if (remainder === 0) return `${formatPence(total)} ÷ ${count} = ${formatPence(base)} each.`
   return `${formatPence(total)} ÷ ${count} does not divide exactly, so ${remainder} ${remainder === 1 ? 'player pays' : 'players pay'} ${formatPence(base + 1)} and ${count - remainder} pay ${formatPence(base)}. The extra pennies rotate between sessions; the shares add up to exactly ${formatPence(total)}.`
 }
+
+// Banner text for a session flagged as test: the flag only hides it, so say what its card payments really were.
+export function testSessionNote(payments: { method: string; livemode: boolean | null }[]): string {
+  const card = payments.filter((p) => p.method === 'STRIPE')
+  const base = 'Kept for the record but excluded from normal session lists, player views and reporting.'
+  if (card.some((p) => p.livemode)) return `${base} It includes real card payments taken in Stripe live mode${card.some((p) => p.livemode === false) ? ', as well as Stripe test-mode payments' : ''}.`
+  if (card.length > 0) return `${base} Its card payments were made in Stripe test mode and are not real money.`
+  return `${base} Its payment links still work and charge in the current Stripe mode.`
+}

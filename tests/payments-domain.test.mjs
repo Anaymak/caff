@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { allocationTotal, estimateFee, explainSplit, formatPence, parsePounds, previewSplit, splitPence } from '../lib/domain/payments.ts'
+import { allocationTotal, estimateFee, explainSplit, formatPence, parsePounds, previewSplit, splitPence, testSessionNote } from '../lib/domain/payments.ts'
 
 const UK = { percentBps: 150, fixedPence: 20 }
 
@@ -36,4 +36,13 @@ test('money parsing and formatting never go through float rounding', () => {
   assert.equal(parsePounds('1,250.00'), 125000)
   for (const bad of ['', '6.255', '-5', 'abc', '1e3']) assert.equal(parsePounds(bad), null)
   assert.equal(formatPence(625), '£6.25'); assert.equal(formatPence(-30), '−£0.30'); assert.equal(formatPence(123456), '£1,234.56'); assert.equal(formatPence(null), '—')
+})
+
+test('test-session banner reflects the mode of its card payments', () => {
+  assert.match(testSessionNote([{ method: 'STRIPE', livemode: true }]), /real card payments taken in Stripe live mode\.$/)
+  assert.match(testSessionNote([{ method: 'STRIPE', livemode: true }, { method: 'STRIPE', livemode: false }]), /live mode, as well as Stripe test-mode payments\./)
+  assert.match(testSessionNote([{ method: 'STRIPE', livemode: false }, { method: 'CASH', livemode: null }]), /test mode and are not real money/)
+  assert.match(testSessionNote([]), /still work and charge in the current Stripe mode/)
+  assert.match(testSessionNote([{ method: 'CASH', livemode: null }]), /current Stripe mode/)
+  assert.doesNotMatch(testSessionNote([{ method: 'STRIPE', livemode: true }]), /not real money/)
 })

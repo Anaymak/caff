@@ -2,6 +2,9 @@
 
 Dates are 2026 unless noted. "Deployed" only where there is evidence (stack update, invalidation id or live check).
 
+## 25 Oct (late evening): test-session banner wording
+- Banner now states whether a test session holds real live card payments, test-mode payments, or none (links still charge in the current mode). `testSessionNote` + test. Tests 47/47, tsc, lint, build. Not deployed.
+
 ## 25 Oct (late evening): first real live payment verified
 - Stripe GBP minimum is £0.30 (docs.stripe.com/currencies; CAFF enforces the same), so 30p not 10p. Owner-only session `2fd336a8…` (marked test) via the normal admin flow; one request `4acfc36d…` £0.30.
 - Owner paid with their own card. Verified: Checkout complete/paid (`cs_live_a1Msm…`), PI `pi_3UUXWzIatQExHTBt0BWT0X63` succeeded, fee 20p, net 10p; webhooks completed → paid, charge.updated → fee_recorded (0 failed); CAFF request PAID once, one payment, owes £0.00; audit trail complete. Not refunded. No code or deploy changes.

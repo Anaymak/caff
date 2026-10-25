@@ -168,3 +168,17 @@ test('a deployment declared as test refuses a live key (and vice versa)', async 
   }
   assert.equal(calls.length, 0, 'nothing reaches Stripe or the database')
 })
+
+test('health: Owner only, reports mode and readiness without secret values', async () => {
+  const { fetchImpl } = fake({
+    'POST https://db.example.test/rest/v1/rpc/my_finance_permissions': (init) => ({ json: init.headers.Authorization === 'Bearer owner-jwt' ? ['owner'] : ['finance.view'] }),
+    'GET https://api.stripe.com/v1/balance': { json: { object: 'balance', livemode: false } },
+    'POST https://db.example.test/rest/v1/rpc/payment_request_public': { json: null },
+  })
+  const handler = createHandler({ env: { ...env, STRIPE_MODE: 'test', SECRETS_PATH: '/caff/payments/' }, fetchImpl, log: silent })
+  assert.equal((await call(handler, 'POST', '/api/admin/health', { body: '{}', headers: { Authorization: 'Bearer admin-jwt' } })).statusCode, 401)
+  const res = await call(handler, 'POST', '/api/admin/health', { body: '{}', headers: { Authorization: 'Bearer owner-jwt' } })
+  const report = JSON.parse(res.body)
+  assert.equal(report.ready, true); assert.equal(report.key_mode, 'test'); assert.equal(report.stripe_livemode, false); assert.equal(report.key_type, 'sk_')
+  assert.ok(!res.body.includes('sk_test_123') && !res.body.includes(SECRET) && !res.body.includes('service-key'), 'no secret values in the report')
+})

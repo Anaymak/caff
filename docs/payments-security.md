@@ -28,16 +28,16 @@ Two independent locks have to agree before money moves in a given mode:
 Test secrets live under `/caff/payments/`. Live secrets go under `/caff/payments-live/`, so they are never mixed.
 
 ## Live launch procedure (only after the owner approves)
-1. The owner clicks **Get live account** (shown when leaving the CAFF sandbox) and completes Stripe's business, identity and payout-bank steps. Stripe then creates the live CAFF account (new `acct_` id, separate from sandbox `acct_1UUS7nIatQExHTBt`). Check the account menu shows CAFF live (no "Sandbox" banner) before continuing.
+1. The owner completes Stripe's **Activate Payments** checklist (open from the sandbox: Get your live account now → `account/onboarding/business-structure`): business type, business details, account representative, products, public details, statement descriptor, bank, review and submit. Already done by the agent on 2026-10-25: website `https://caffleague.com`, business description, product "Accept online payments" only (Stripe Tax deliberately not enabled), dashboard setup. Stripe then creates the live CAFF account (new `acct_` id, separate from sandbox `acct_1UUS7nIatQExHTBt`). Check the account menu shows CAFF live (no "Sandbox" banner) before continuing.
 2. In the **live CAFF account** (not the sandbox, and never MotorPortal HQ):
    - Create a restricted key with the same 4 permissions as the test key: Checkout Sessions write, Charges and Refunds write, Payment Intents read, Balance read.
    - Create a webhook to `https://caffleague.com/api/stripe/webhook` with snapshot payloads and the same 10 events as test mode.
 3. Store SecureStrings `/caff/payments-live/STRIPE_SECRET_KEY`, `/caff/payments-live/STRIPE_WEBHOOK_SECRET` and `/caff/payments-live/SUPABASE_SERVICE_ROLE_KEY` (the Supabase key can be the same one). The owner pastes the values; agents never handle them.
-4. Update `caff-payments` with `StripeMode=live` and `SecretsPath=/caff/payments-live/` through a change set.
-5. As Owner, set Admin → Sessions → Payment settings → Stripe mode to Live.
+4. Run `scripts/go-live.sh live`: it checks the three `/caff/payments-live/` SecureStrings exist (names only), shows the change set and applies it only after typing `yes`.
+5. Verify with the Owner-only health check `POST /api/admin/health` (signed-in owner token): `deployment_mode`=`key_mode`=`live`, `stripe_livemode` true, `ready` true. Then, as Owner, set Admin → Sessions → Payment settings → Stripe mode to Live.
 6. Smoke test without charging: open a pay link and confirm Checkout shows live mode with no "Sandbox" badge, then cancel. Ask the owner before any real payment.
 
-Rollback: set Payment settings back to Test and update the stack to `StripeMode=test` and `SecretsPath=/caff/payments/`.
+Rollback: set Payment settings back to Test and run `scripts/go-live.sh test`.
 
 ## Known test data
 Session `68e3f37d-dc04-4185-a532-07cec6049783`, "TEST - Stripe test-mode check", holds one £1.00 test payment (fee 23p). Keep it. Migration 002 marks it `is_test`, which hides it from normal lists, player views and reporting.

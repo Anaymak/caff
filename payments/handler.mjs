@@ -10,6 +10,7 @@
 //   POST /api/admin/refund               admin JWT + payments.refund
 //   POST /api/admin/expire-checkouts     admin JWT + payments.request
 //   POST /api/admin/reconcile-fees       admin JWT + finance.view
+//   POST /api/admin/health               Owner JWT: which mode/credentials are loaded (never values)
 //
 // Environment: SUPABASE_URL, SUPABASE_ANON_KEY, SITE_URL and SECRETS_PATH. The
 // secrets (STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, SUPABASE_SERVICE_ROLE_KEY)
@@ -209,6 +210,23 @@ export function createHandler({ env: baseEnv = process.env, fetchImpl = globalTh
     return { status: 200, body: { updated, checked: Math.min(intents.length, 50) } }
   }
 
+  // Owner-only readiness report: proves which Stripe mode and credentials the function
+  // loaded (prefixes and booleans only) and that Stripe and the database answer.
+  async function health(jwt) {
+    const perms = (await rpc('my_finance_permissions', {}, jwt)) ?? []
+    if (!perms.includes('owner')) throw new HttpError(401, 'Owner only')
+    const report = {
+      deployment_mode: env.STRIPE_MODE ?? null, key_mode: keyMode, secrets_path: env.SECRETS_PATH ?? null,
+      key_type: (env.STRIPE_SECRET_KEY ?? '').slice(0, 3) || null, webhook_secret_present: /^whsec_/.test(env.STRIPE_WEBHOOK_SECRET ?? ''),
+      service_key_present: Boolean(env.SUPABASE_SERVICE_ROLE_KEY), stripe_ok: false, stripe_livemode: null, database_ok: false,
+    }
+    try { const balance = await stripe('GET', '/v1/balance'); report.stripe_ok = true; report.stripe_livemode = balance.livemode } catch (error) { report.stripe_error = error instanceof Error ? error.message.slice(0, 120) : 'error' }
+    try { await rpc('payment_request_public', { p_request: '00000000-0000-4000-8000-000000000000' }); report.database_ok = true } catch { report.database_ok = false }
+    report.ready = report.key_mode === report.deployment_mode && report.webhook_secret_present && report.service_key_present
+      && report.stripe_ok && report.stripe_livemode === (report.key_mode === 'live') && report.database_ok
+    return { status: 200, body: report }
+  }
+
   return async function handler(event) {
     const method = event.requestContext?.http?.method ?? 'GET'
     const path = (event.rawPath ?? '/').replace(/\/+$/, '')
@@ -242,6 +260,7 @@ export function createHandler({ env: baseEnv = process.env, fetchImpl = globalTh
           result = await refund(body, jwt)
         } else if (path === '/api/admin/expire-checkouts') result = await expireCheckouts(body, jwt)
         else if (path === '/api/admin/reconcile-fees') result = await reconcileFees(body, jwt)
+        else if (path === '/api/admin/health') result = await health(jwt)
       }
       if (!result) result = { status: 404, body: { error: 'Not found' } }
       return { statusCode: result.status, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }, body: JSON.stringify(result.body) }

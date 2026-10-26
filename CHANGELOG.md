@@ -2,6 +2,10 @@
 
 Dates are 2026 unless noted. "Deployed" only where there is evidence (stack update, invalidation id or live check).
 
+## 26 Oct: health-check workflow fixed (`main` `cc869bf`)
+- Scheduled run 40328713080 (13:13 UTC, `c12c8b6`) failed in "Website responds": `caff.anaysprojects.com/auth/` returned HTTP 301 (intentional redirect to caffleague.com since the canonical-domain change); Supabase step skipped. Not an outage, secret or key problem.
+- Fix: check `https://caffleague.com/auth/` for 200 and require the old host to 301 to it; `-sS` errors and connect timeouts. Same file synced to `pitch-payments`. Verified locally (pass, 404, missing redirect, DNS failure) and by manual run 40396051186: 200 / 301 / auth 200 / database 200; no keys in logs; schedule active; no deployments triggered.
+
 ## 25 Oct (late evening): release: banner fix + mobile polish deployed (`70f2406`)
 - Pre-deploy: remaining pages audited on the harness (admin match open/final, match open/final, teams→matches, 6 phones + landscape + desktop): fixed matches-list overflow at 320/360px (Availability open pill widened cards; layout viewport 374px). Availability buttons exercised at 375px (Playing/Maybe/Can't make it/Watching: selection, pill, notice; 143×70px). Harness: open match + `set_player_availability` stand-in. Player profile pages crash only in the harness (mock `.single()` returns []), so checked on production instead: own and another player's profile and the real match page at 623px (Chrome minimum), no overflow, no errors.
 - Deployed with `scripts/deploy-aws.sh caff-site` (tests 48/48, lint, build), invalidation `I7ABWNZ2NATT4VI5YXB6VI7XGT` completed. Verified: /, /auth/, /dashboard/, /pay/, /privacy/, session view 200; www 301; live CSS has the new rules; production at iPhone 375 (built-in browser): pay page for the real £0.30 request shows Paid pill, no deadline, dashboard button, no overflow; sign-in and sign-up forms 16px inputs, correct autocomplete. Payments unchanged: Lambda live `/caff/payments-live/` (stack last updated 19:45, before this work), Owner health ready=true, Payment settings Live. No payments, requests or data created.

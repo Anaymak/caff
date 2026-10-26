@@ -27,7 +27,7 @@ Details: `docs/deployment.md`.
 - Payments tables (migration `202610250001`, **applied 2026-10-25** [V]): admin_permissions, payment_settings, pitch_sessions, session_attendees, payment_requests, payment_request_checkouts, payments, payment_refunds, stripe_events. All writes go through SECURITY DEFINER functions; the browser has SELECT only (RLS-filtered).
 - Rollback for 001: `supabase/rollback/202610250001_pitch_sessions_payments_down.sql` (removes only payment objects; verified on PGlite, not run in production).
 - Migration `202610250002_test_sessions_player_history.sql`: **applied 2026-10-25** (checksum-verified; rollback `supabase/rollback/202610250002_..._down.sql`, verified on PGlite) [V]. Adds `pitch_sessions.is_test`, marks session `68e3f37d-…` as test, `set_pitch_session_test`, `my_pitch_payments`, and replaces `get_pitch_sessions` / `my_payment_requests` to hide test sessions.
-- Supabase Free projects pause after ~7 days without activity; a daily health-check workflow exists on GitHub `main` [U: whether it is running].
+- Supabase Free projects pause after ~7 days without activity; the daily health-check workflow on GitHub `main` runs and passes [V 2026-10-26, run 40396051186]. It does not guarantee the project is never paused (Supabase decides inactivity; GitHub disables schedules in public repos after 60 days without repo activity).
 Details: `docs/database.md`.
 
 ## 5. Auth, registration, roles
@@ -80,7 +80,7 @@ Lambda env: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SITE_URL`, `SECRETS_PATH`, `ST
 6. "Confirm email" off: anyone can create a pending account (approval still gates access).
 7. AWS CLI session uses root credentials (works, but an IAM admin user would be safer).
 8. Supabase "default" secret key still exists alongside `caff_payments_lambda`; redirect allow-list keeps legacy hosts.
-9. Supabase Free pausing risk [U whether keep-alive runs].
+9. Supabase Free pausing risk: reduced by the daily health check (verified running 26 Oct), not eliminated.
 
 ## 14. Production safety rules
 Never: enable live Stripe or switch payment mode without the owner's explicit approval; touch MotorPortal HQ (Stripe, AWS, DNS); delete financial/audit rows; run production SQL without review; put secrets in files/commits/chat; remove caff.anaysprojects.com records; deploy unrelated projects. Always: migrations additive and reviewed, applied in filename order; build with `NEXT_PUBLIC_PITCH_SESSIONS=on`; verify after deploy.

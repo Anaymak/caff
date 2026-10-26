@@ -27,4 +27,4 @@ See HANDOVER §15a. The harness build must never be deployed: `scripts/deploy-aw
 
 ## Monitoring
 - No alerting is configured. Lambda logs are in `/aws/lambda/caff-payments`, kept 30 days.
-- A daily GitHub Actions health check (`.github/workflows/supabase-health.yml`) keeps Supabase Free awake. [U: whether it runs on GitHub]
+- Daily GitHub Actions health check (`.github/workflows/supabase-health.yml`, runs from `main`, cron 06:17 UTC; GitHub often starts scheduled runs hours late): `https://caffleague.com/auth/` must be 200, `https://caff.anaysprojects.com/auth/` must 301 to it, Supabase auth health and one RLS-protected read with the public anon key (secret `CAFF_SUPABASE_ANON_KEY`) must be 200. Only status codes are printed. A failure emails the repo owner. [V 2026-10-26: manual run 40396051186 all green]

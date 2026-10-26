@@ -19,19 +19,25 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Website responds
+        # caffleague.com is the canonical site; the old caff.anaysprojects.com host must keep 301-redirecting to it.
+        # Redirects are not followed, so a broken site or a broken redirect both fail the job.
         run: |
-          code=$(curl -s -o /dev/null -m 20 -w '%{http_code}' https://caff.anaysprojects.com/auth/)
-          echo "caff.anaysprojects.com/auth/ -> HTTP $code"
+          code=$(curl -sS -o /dev/null --connect-timeout 10 -m 20 -w '%{http_code}' https://caffleague.com/auth/)
+          echo "caffleague.com/auth/ -> HTTP $code"
           test "$code" = "200" || { echo "::error::CAFF website returned HTTP $code"; exit 1; }
+          redirect=$(curl -sS -o /dev/null --connect-timeout 10 -m 20 -w '%{http_code} %{redirect_url}' https://caff.anaysprojects.com/auth/)
+          old=${redirect%% *}; target=${redirect#* }
+          echo "caff.anaysprojects.com/auth/ -> HTTP $old $target"
+          test "$old" = "301" && test "$target" = "https://caffleague.com/auth/" || { echo "::error::Old CAFF domain returned HTTP $old (expected 301 to https://caffleague.com/auth/)"; exit 1; }
       - name: Supabase auth and database respond
         env:
           SUPABASE_URL: https://vkdsdgiecuvviaukrafa.supabase.co
           ANON_KEY: ${{ secrets.CAFF_SUPABASE_ANON_KEY }}
         run: |
           test -n "$ANON_KEY" || { echo "::error::Repository secret CAFF_SUPABASE_ANON_KEY is not set"; exit 1; }
-          auth=$(curl -s -o /dev/null -m 20 -w '%{http_code}' -H "apikey: $ANON_KEY" "$SUPABASE_URL/auth/v1/health")
+          auth=$(curl -sS -o /dev/null --connect-timeout 10 -m 20 -w '%{http_code}' -H "apikey: $ANON_KEY" "$SUPABASE_URL/auth/v1/health")
           echo "Supabase auth health -> HTTP $auth"
           test "$auth" = "200" || { echo "::error::Supabase auth returned HTTP $auth (project paused or down?)"; exit 1; }
-          db=$(curl -s -o /dev/null -m 20 -w '%{http_code}' -H "apikey: $ANON_KEY" -H "Authorization: Bearer $ANON_KEY" "$SUPABASE_URL/rest/v1/venues?select=id&limit=1")
+          db=$(curl -sS -o /dev/null --connect-timeout 10 -m 20 -w '%{http_code}' -H "apikey: $ANON_KEY" -H "Authorization: Bearer $ANON_KEY" "$SUPABASE_URL/rest/v1/venues?select=id&limit=1")
           echo "Supabase database request -> HTTP $db"
           test "$db" = "200" || { echo "::error::Supabase database request returned HTTP $db"; exit 1; }
